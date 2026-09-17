@@ -1,0 +1,72 @@
+<div id="narciso-core-ballot" aria-label="Comparación ciega de respuestas">
+  <style>
+    #narciso-core-ballot .answer, #narciso-core-ballot .question, #narciso-core-ballot .context {white-space:pre-wrap;overflow-wrap:anywhere;}
+    #narciso-core-ballot .answers {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:20px 0;}
+    #narciso-core-ballot .question {margin:12px 0;}
+    #narciso-core-ballot .context {margin:12px 0;}
+    #narciso-core-ballot .vote-fields {display:grid;gap:12px;margin:16px 0;}
+    @media(max-width:640px){#narciso-core-ballot .answers{grid-template-columns:1fr;}}
+  </style>
+  <div class="viz-row">
+    <button type="button" class="btn" data-action="previous">Anterior</button>
+    <span data-slot="progress" aria-live="polite"></span>
+    <button type="button" class="btn" data-action="next">Siguiente</button>
+  </div>
+  <h3 data-slot="title"></h3>
+  <details data-slot="history-wrap"><summary>Contexto anterior</summary><div class="context" data-slot="history"></div></details>
+  <div class="question" data-slot="question"></div>
+  <div class="answers">
+    <section aria-label="Respuesta A"><h3>A</h3><div class="answer" data-slot="A"></div></section>
+    <section aria-label="Respuesta B"><h3>B</h3><div class="answer" data-slot="B"></div></section>
+  </div>
+  <hr>
+  <div class="vote-fields">
+    <label class="form-label">¿Cuál querrías recibir?
+      <select class="form-select" data-input="choice">
+        <option value="">Sin elegir</option><option value="A">A</option><option value="B">B</option>
+        <option value="tie">Empate: ambas me sirven</option><option value="neither">Ninguna me convence</option>
+      </select>
+    </label>
+    <label class="form-label">Motivo — criterio, naturalidad, iniciativa o exactitud (opcional)
+      <textarea class="form-control" data-input="reason" rows="2"></textarea>
+    </label>
+  </div>
+  <div class="viz-row"><span data-slot="count" aria-live="polite"></span><button type="button" class="btn btn-primary" data-action="submit">Enviar mis elecciones</button></div>
+  <div data-slot="status" aria-live="polite"></div>
+  <div data-slot="fallback" hidden><label class="form-label">Elecciones para pegar en la conversación<textarea class="form-control" data-slot="export" rows="5" readonly></textarea></label></div>
+  <script>
+  (()=>{
+    const root=document.getElementById('narciso-core-ballot');
+    const cases=__BLIND_CASES__;
+    const runId=__RUN_ID__;
+    const get=s=>root.querySelector(s);
+    const slot=s=>get('[data-slot="'+s+'"]');
+    const choice=get('[data-input="choice"]'),reason=get('[data-input="reason"]');
+    const previous=get('[data-action="previous"]'),next=get('[data-action="next"]'),submit=get('[data-action="submit"]');
+    let index=0,votes={};
+    try{const saved=JSON.parse(localStorage.getItem(runId)||'{}');if(saved&&typeof saved==='object')votes=saved;}catch{}
+    function counts(){const count=cases.filter(c=>['A','B','tie','neither'].includes(votes[c.id]?.choice)).length;slot('count').textContent=count+' de '+cases.length+' valorados';submit.disabled=count===0;}
+    function save(){votes[cases[index].id]={choice:choice.value,reason:reason.value};try{localStorage.setItem(runId,JSON.stringify(votes));}catch{}counts();}
+    function render(){
+      const c=cases[index];
+      slot('title').textContent=c.title;slot('progress').textContent='Caso '+(index+1)+' de '+cases.length;
+      slot('question').textContent=c.prompt;slot('A').textContent=c.A;slot('B').textContent=c.B;
+      slot('history-wrap').hidden=!c.history.length;
+      slot('history').textContent=c.history.map(m=>(m.role==='user'?'Tú: ':'Asistente: ')+m.body).join('\n\n');
+      slot('history-wrap').open=Boolean(c.history.length);
+      choice.value=votes[c.id]?.choice||'';reason.value=votes[c.id]?.reason||'';
+      previous.disabled=index===0;next.disabled=index===cases.length-1;counts();
+    }
+    previous.addEventListener('click',()=>{save();index--;render();});
+    next.addEventListener('click',()=>{save();index++;render();});
+    choice.addEventListener('change',save);reason.addEventListener('input',save);
+    submit.addEventListener('click',async()=>{
+      save();const selections=cases.filter(c=>['A','B','tie','neither'].includes(votes[c.id]?.choice)).map(c=>({case:c.id,number:c.number,...votes[c.id]}));
+      const prompt='Mis elecciones para la comparación ciega de Narciso. Evalúa las preferencias, revisa errores materiales y revela la clave de estos casos; no despliegues automáticamente una variante.\n'+JSON.stringify({runId,selections},null,2);
+      if(window.openai?.sendFollowUpMessage){try{await window.openai.sendFollowUpMessage({prompt,title:'Enviar preferencias A/B'});slot('status').textContent='Elecciones enviadas.';}catch{slot('status').textContent='No se enviaron. Puedes copiar las elecciones.';slot('fallback').hidden=false;slot('export').value=prompt;}}
+      else{slot('fallback').hidden=false;slot('export').value=prompt;slot('status').textContent='Copia las elecciones y pégalas en la conversación.';}
+    });
+    render();
+  })();
+  </script>
+</div>

@@ -108,6 +108,25 @@ compartir errores. Un correo no prueba por sí solo la realidad del hecho report
 
 ## Por dónde continuar
 
+**Decisión pendiente del propietario: comparación ciega del núcleo conversacional.**
+Tras probar mensajes reales, el propietario cuestionó si acumular reglas era el
+camino correcto. Se congeló un experimento de 12 casos (seis adaptados de sus
+ejemplos y seis sintéticos nuevos), con 24 respuestas, mismo Opus 5/high y mismo
+runtime/herramientas. Una variante usa las instrucciones actuales y otra una
+personalidad breve más contrato de autoridad/capacidades. No se modificó ni
+redesplegó el servicio con este experimento. No elegir ganador antes de sus votos.
+
+Protocolo y reproducción: [../experiments/core-ab/README.md](../experiments/core-ab/README.md).
+Resultados, hashes y clave A/B privada:
+`~/.local/share/narciso/data/evaluations/core-ab-2026-09-17/`.
+`manifest.json` contiene la clave; `blind.json`/`blind.md` la omiten.
+La interfaz local se genera desde `blind.json` con `render-ballot.mjs`.
+La clave no está incrustada en la interfaz. Recibir votos por caso, separar
+preferencias de errores materiales, y examinar casos nuevos antes de proponer
+una sustitución. No seguir ajustando las variantes con estos mismos casos
+mientras se espera la evaluación. Las pruebas de estilo anteriores no equivalen
+a una validación de producto, y no demuestran que Narciso ya sea satisfactorio.
+
 Prueba posterior de caja negra por WhatsApp:
 [instinct-behavior-evaluation.md](instinct-behavior-evaluation.md). Incluye
 correcciones de contexto, una pregunta intercalada durante investigación y
