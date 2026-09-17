@@ -49,7 +49,7 @@ El control del navegador local todavía está pendiente.
     cambio aprobado, y ocasionalmente ❤️, 😂, 🎉 o 💪 según el contexto.
     Máximo una reacción por mensaje; nunca significa que la tarea terminó.
 12. **CLI de escritorio y diagnóstico.** Conversación desde terminal, comando
-    `doctor`, trazas privadas con retención limitada y 33 pruebas automatizadas.
+    `doctor`, trazas privadas con retención limitada y 46 pruebas automatizadas.
 
 13. **Tareas independientes.** Narciso decide cuándo delegar una investigación
     y acusa su recepción. Un trabajador de fondo continúa con su propio contexto
@@ -65,6 +65,11 @@ El control del navegador local todavía está pendiente.
     Los contadores detallados quedan en el diagnóstico. Herramienta de suma
     decimal exacta con fuentes para comprobar totales; verifica la aritmética
     de los importes aportados, no la legitimidad ni liquidación de transacciones.
+
+16. **Investigación y publicación separadas.** Fuentes capturadas por tarea,
+    hallazgos con citas, comprobaciones de referencias/cálculos, revisión de
+    evidencia, redacción sin herramientas y auditoría final. Las etapas se guardan
+    para recuperar trabajo. [Arquitectura y límites](docs/evidence-publication.md).
 
 Probado en una instalación personal de Apple Silicon: acceso de lectura a los
 seis servicios de Google, iMessage completo, lectura antes de la respuesta,
@@ -103,6 +108,11 @@ flowchart LR
     Runtime --> Jobs[Tareas y checkpoints]
     Jobs --> Worker[Trabajador independiente]
     Worker <--> Claude
+    Worker --> Evidence[Fuentes y hallazgos]
+    Evidence --> Review[Revisión de evidencia]
+    Review --> Editor[Redacción aislada]
+    Editor --> Audit[Auditoría final]
+    Audit --> Jobs
     Jobs --> Notify[Cola de notificaciones]
     Notify --> Gateway
     Runtime --> Speech[whisper.cpp local]
@@ -193,8 +203,10 @@ anterior. La elección de delegar usa el modelo; no hay una demora artificial.
 El gateway mantiene la conversación separada de un trabajador de investigación.
 Máximo tres tareas pendientes/activas y un trabajador de fondo, además del chat.
 Cada segmento de Claude tiene un límite de tres minutos; el trabajo puede
-continuar desde un checkpoint durante hasta 18 ejecuciones antes de quedar
-bloqueado y pedir intervención. No es un scheduler para recordatorios futuros.
+continuar desde un checkpoint durante hasta 18 segmentos de investigación antes de quedar
+bloqueado y pedir intervención. La revisión, redacción y auditoría añaden llamadas
+separadas; el límite global es de 36 llamadas por tarea y puede aumentar tiempo y consumo del cupo. No es un scheduler para
+recordatorios futuros.
 
 El trabajador usa herramientas de lectura. No puede ejecutar ni preparar
 escrituras, cambiar memoria, crear tareas anidadas o reaccionar a otro mensaje.

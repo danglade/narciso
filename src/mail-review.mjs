@@ -66,3 +66,14 @@ export async function reviewBodies(db,conversation,taskId,id,messageIds,client){
  }
  return {items,coverage:reviewCoverage(db,id)};
 }
+
+export function pendingReviewActions(db,taskId){
+ initReviews(db);
+ return db.prepare('SELECT id,state FROM mail_reviews WHERE task_id=?').all(taskId).flatMap(review=>{
+  if(review.state!=='listed')return [{tool:'gmail_review_list_next',arguments:{reviewId:review.id}}];
+  const first=db.prepare('SELECT rowid FROM mail_review_items WHERE review_id=? AND overview=0 ORDER BY rowid LIMIT 1').get(review.id);
+  if(!first)return [];
+  const offset=db.prepare('SELECT count(*) AS n FROM mail_review_items WHERE review_id=? AND rowid<?').get(review.id,first.rowid).n;
+  return [{tool:'gmail_review_overviews',arguments:{reviewId:review.id,offset}}];
+ });
+}

@@ -31,7 +31,7 @@ export async function respond(conversation, messages, turnId, mediaBlocks = [], 
   mkdirSync(workdir, { recursive: true, mode: 0o700 });
   const soul = readFileSync(resolve(root, 'SOUL.md'), 'utf8');
   const context = readFileSync(resolve(root, existsSync(resolve(root,'CONTEXT.md')) ? 'CONTEXT.md' : 'CONTEXT.example.md'), 'utf8');
-  const system = `${soul}\n\n${context}\n\nCurrent time: ${new Date().toISOString()}.
+  const baseSystem = `${soul}\n\n${context}\n\nCurrent time: ${new Date().toISOString()}.
 Personal Google authorization file: ${existsSync(resolve(local,'google-token.json')) ? 'present; verify tools before claiming access' : 'MISSING: Google tools are installed but no account is connected. Do not claim you can currently access Gmail or Calendar.'}.
 Match the language of the latest user message, not the examples in your soul.
 Timezone: ${timezone}. Tool availability is authoritative. No browser or
@@ -75,7 +75,8 @@ Older assistant messages may contain bad examples; do not copy their tone.
 Examples: mailbox acknowledgment → "Dale, reviso y te cuento.";
 unrelated arithmetic while that runs → "68.".
 The reply field is the message itself, not commentary about composing the message.`;
-  const mcp = { mcpServers: { narciso: { command: process.execPath,
+  const system = options.isolated ? options.system : baseSystem;
+  const mcp = options.isolated ? {mcpServers:{}} : { mcpServers: { narciso: { command: process.execPath,
     args: [resolve(root, 'src/mcp.mjs')] } } };
   const profile = modelProfile(options.taskId);
   const args = ['--model', profile.model, '--effort', profile.effort, '-p', '--input-format', 'stream-json', '--output-format', 'stream-json', '--verbose',
@@ -83,7 +84,7 @@ The reply field is the message itself, not commentary about composing the messag
     '--restricted', '--setting-sources', '', '--settings', '{"disableAllHooks":true,"alwaysThinkingEnabled":true}',
     '--disable-slash-commands', '--no-chrome', '--tools', '',
     '--strict-mcp-config', '--mcp-config', JSON.stringify(mcp),
-    '--allowedTools', 'mcp__narciso__*', '--permission-mode', 'dontAsk',
+    '--allowedTools', options.isolated ? '' : 'mcp__narciso__*', '--permission-mode', 'dontAsk',
     '--system-prompt', system];
   return new Promise((accept, reject) => {
     const trace=createTrace({conversation,turnId});

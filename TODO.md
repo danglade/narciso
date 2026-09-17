@@ -36,6 +36,13 @@ Los puntos abiertos son planes, no capacidades ya disponibles.
 - [x] Suma decimal exacta con referencias de origen y rechazo de fuentes repetidas.
 - [ ] Evaluar periódicamente prioridades y exactitud con correos reales; la suma no verifica por sí sola la extracción ni deduplica avisos con IDs diferentes.
 
+- [x] Registro privado de fuentes y hallazgos con citas vinculadas a cada tarea.
+- [x] Revisión de evidencia, editor aislado y auditoría final con recuperación por etapa.
+- [x] Misma verificación para hallazgos intermedios; sin envío directo del investigador.
+- [x] Casos fijos reproducibles para los errores observados.
+- [ ] Política de retención para fuentes y artefactos privados en SQLite.
+- [ ] Evaluar verificador independiente y extender el control a reformulaciones del chat.
+
 ## Fase 3 — Navegador en el Mac
 
 - [ ] Control de un navegador local con sesiones persistentes.

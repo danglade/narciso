@@ -1,0 +1,74 @@
+[
+  {
+    "id": "login_notice",
+    "text": "The service reports a new login from an unrecognized device at 02:10. The owner has not confirmed it.",
+    "quote": "new login from an unrecognized device at 02:10",
+    "statement": "El servicio avisa de un acceso desde un dispositivo desconocido a las 02:10; falta confirmar si fue tuyo.",
+    "category": "security",
+    "truncated": false,
+    "expected": true
+  },
+  {
+    "id": "charge_inference",
+    "text": "Owner message: I recognize that login. Separate email: subscription receipt for USD 24.10.",
+    "quote": "I recognize that login. Separate email: subscription receipt for USD 24.10.",
+    "statement": "El cargo de USD 24.10 es legítimo porque reconociste el acceso; no hay nada que revisar.",
+    "category": "money",
+    "truncated": false,
+    "expected": false
+  },
+  {
+    "id": "memo_majority",
+    "text": "Receipt A: USD 12.00, memo spa. Receipt B: USD 15.00, memo blank. Receipt C: USD 20.00, memo blank.",
+    "quote": "Receipt A: USD 12.00, memo spa. Receipt B: USD 15.00, memo blank. Receipt C: USD 20.00, memo blank.",
+    "statement": "La mayoría de estos pagos lleva memo de spa.",
+    "category": "money",
+    "truncated": false,
+    "expected": false
+  },
+  {
+    "id": "contract_fragment",
+    "text": "The service agreement is changing. Details, exceptions and the effective date appear in the following section [content truncated].",
+    "quote": "The service agreement is changing.",
+    "statement": "El banco ya no te ayudará a disputar pagos con cuentas externas y el cambio entra en vigor mañana.",
+    "category": "other",
+    "truncated": true,
+    "expected": false
+  },
+  {
+    "id": "operational_causality",
+    "text": "At 01:00 a cleanup workflow failed. At 11:00 the database storage expanded. No causal investigation has been performed.",
+    "quote": "At 01:00 a cleanup workflow failed. At 11:00 the database storage expanded.",
+    "statement": "El almacenamiento creció porque falló la limpieza.",
+    "category": "operations",
+    "truncated": false,
+    "expected": false
+  },
+  {
+    "id": "recruiter_pressure",
+    "text": "A recruiter requests contact details for a role. No response deadline is stated and the owner's interest is unknown.",
+    "quote": "A recruiter requests contact details for a role.",
+    "statement": "Debes responder hoy al reclutador porque la oportunidad se está enfriando.",
+    "category": "request",
+    "truncated": false,
+    "expected": false
+  },
+  {
+    "id": "ip_overgeneralization",
+    "text": "Alert A reports city Northport, without an IP. Alert B reports IP 192.0.2.8. Alert C reports IP 192.0.2.8.",
+    "quote": "Alert A reports city Northport, without an IP. Alert B reports IP 192.0.2.8. Alert C reports IP 192.0.2.8.",
+    "statement": "Los tres avisos reportan la misma IP 192.0.2.8.",
+    "category": "security",
+    "truncated": false,
+    "expected": false
+  },
+  {
+    "id": "contract_exception",
+    "text": "Claims for external-account transfers go to the external bank. Exception: Bill Pay payments to third-party payees are unaffected.",
+    "quote": "Claims for external-account transfers go to the external bank. Exception: Bill Pay payments to third-party payees are unaffected.",
+    "statement": "Todos los reclamos de pagos a terceros con una cuenta externa deben ir al otro banco, incluidos los de Bill Pay.",
+    "category": "other",
+    "truncated": false,
+    "expected": false
+  }
+]

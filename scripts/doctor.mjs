@@ -16,6 +16,6 @@ const status={claudeSubscriptionLogin:claude,chatModel:modelProfile(),taskModel:
   googleOAuthClientPresent:existsSync(resolve(local,'google-client.json')),googleTokenPresent:google,
   imageInputEnabled:existsSync('/usr/bin/sips'),
   audioTranscriptionReady:existsSync(process.env.NARCISO_FFMPEG_BIN||'/opt/homebrew/bin/ffmpeg') && existsSync(process.env.NARCISO_WHISPER_BIN||'/opt/homebrew/bin/whisper-cli') && existsSync(process.env.NARCISO_WHISPER_MODEL||resolve(local,'models/ggml-small.bin')),
-  backgroundInvestigationsEnabled:true,browserConnected:false,scheduledFollowupsEnabled:false};
+  backgroundInvestigationsEnabled:true,evidencePublicationEnabled:true,browserConnected:false,scheduledFollowupsEnabled:false};
 console.log(JSON.stringify(status,null,2));
 if(!claude || !status.ownerPhoneValid)process.exitCode=1;

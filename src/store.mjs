@@ -4,6 +4,7 @@ import { chmodSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { local } from './config.mjs';
 import { initJobs } from './jobs.mjs';
+import { initEvidence } from './evidence.mjs';
 
 export function openStore(path = resolve(local, 'narciso.sqlite')) {
   const db = new DatabaseSync(path);
@@ -35,6 +36,7 @@ export function openStore(path = resolve(local, 'narciso.sqlite')) {
       ALTER TABLE deliveries DROP COLUMN request;`);
   }
   initJobs(db);
+  initEvidence(db);
   return db;
 }
 export function acceptDelivery(db, id, conversation, body) {

@@ -80,6 +80,10 @@ Normal Google changes keep their existing typed approval flow. Timed reminders,
 browser automation and autonomous scheduled monitoring are still unavailable.
 Only material findings, a real blocker, or a completed result deserve a task
 notification. Routine tool steps and internal deliberation stay private.
+For background investigations, the research-stage contract is authoritative: return
+cited findings, not a publishable draft. The host verifies, edits and audits them.
+Direct task_notify text is not sent. An important early update uses continue with
+notify=true and cited findings, which pass through the same checks.
 
 Be exact about coverage: message IDs found, subjects/snippets inspected, and
 bodies read are different things. An estimated total or one page is not an

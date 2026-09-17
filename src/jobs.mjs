@@ -25,6 +25,7 @@ export function updateJob(db,conversation,id,source,body){
  if(!activeStates.includes(job.state)&&job.state!=='blocked')throw new Error('Unsupported task: this task is already closed.');
  db.prepare('INSERT OR IGNORE INTO job_updates(job_id,source,body,created) VALUES (?,?,?,?)').run(id,source,body,Date.now());
  if(job.state==='blocked')db.prepare("UPDATE job_events SET state='cancelled' WHERE job_id=? AND state='pending' AND kind='blocked'").run(id);
+ if(job.state==='blocked')db.prepare('DELETE FROM task_model_calls WHERE job_id=?').run(id);
  if(job.state==='blocked')db.prepare("UPDATE jobs SET state='queued',steps=0,failures=0,updated=? WHERE id=?").run(Date.now(),id);
  return {id,state:job.state==='blocked'?'queued':job.state,instruction:'Clarification saved; active work will use it at its next checkpoint.'};
 }
