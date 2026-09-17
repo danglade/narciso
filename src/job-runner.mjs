@@ -32,6 +32,24 @@ Never count the items mentioned in a SaneBox digest as separately inspected emai
 Never assume a login was authorized, a charge is legitimate, or unfamiliar mail is trash.
 Prioritize security, financial/operational notices and direct requests; ground findings in
 specific emails. Report actual review scope and uncertainties. Coverage is host-audited.
+Write the final review as 3-5 short topic paragraphs, generally 150-250 words,
+leading with the highest-consequence verified finding, then one concrete next step.
+No long newsletter inventory, numbered report, technical preamble or speculative links
+to unrelated history. Do not manufacture urgency for a recruiter without a deadline.
+Do not narrate how disciplined the review was or recite instructions from this prompt.
+Ask briefly whether an unfamiliar login was theirs; omit a generic security tutorial
+or an unsolicited explanation of missing tools. The next action must fit available tools: no promise to change a
+password, close sessions or operate a portal without browser control.
+Routine promotions with no finding need no section. Ask the useful question naturally,
+without a "Concrete next step" label. Retrieve missing content yourself when a tool
+can do it. Describe receipts as reported payments; never infer "no risk", "everything
+normal", or "nothing requires action" from receipt emails alone. Do not claim an
+issue is the only urgent one when the evidence does not support that certainty.
+Call sum_amounts before giving any combined monetary total; use retrieved amounts,
+deduplicate transaction notifications, and keep currencies and payment states separate.
+Keep source IDs, counts and supporting details in the factual checkpoint. The host
+adds a short scope limitation; do not repeat a coverage audit in your reply or claim
+full-content review when only overviews or truncated bodies were available.
 If APIs repeatedly fail, stop with blocked instead of claiming completion.
 The schema has status, reply and checkpoint. Never put tool narration or reasoning in reply.`;
 
@@ -57,7 +75,7 @@ export function createJobRunner(db,{run=respond,report=()=>{},intervalMs=750,max
     db.prepare("UPDATE jobs SET state='queued',checkpoint=?,failures=0,updated=? WHERE id=?").run(checkpoint,Date.now(),job.id);report('task_checkpoint',job.id);return;
    }
    let reply=out.reply;
-   if(coverage.length)reply+='\n\nCobertura de correo: '+coverage.map(c=>`${c.listed} encontrados${c.listingComplete?'':' (listado parcial)'}, ${c.overviewRead} con asunto/resumen consultado y ${c.bodiesRead} con cuerpo consultado${c.truncatedBodies?` (${c.truncatedBodies} recortados)`:''}.`).join(' ')+' No incluye Spam/Papelera ni adjuntos; los digests cuentan como un correo.';
+   if(coverage.length)reply+='\n\n'+reviewScopeNote(coverage);
    db.exec('BEGIN IMMEDIATE');try{
     db.prepare('UPDATE jobs SET state=?,checkpoint=?,result=?,updated=? WHERE id=?').run(out.status,out.checkpoint,reply,Date.now(),job.id);
     addJobEvent(db,job,out.status,reply);db.exec('COMMIT');
@@ -76,6 +94,16 @@ export function createJobRunner(db,{run=respond,report=()=>{},intervalMs=750,max
  }
  function tick(){if(stopped)return;active=step().catch(()=>report('task_runner_error')).finally(()=>{if(!stopped)timer=setTimeout(tick,intervalMs);});}
  if(autoStart)tick();return {async stop(){stopped=true;clearTimeout(timer);controller?.abort();await active;},step};
+}
+
+export function reviewScopeNote(coverage){
+ const partial=coverage.some(c=>!c.listingComplete||!c.overviewComplete);
+ const bodies=coverage.some(c=>c.bodiesRead>0);
+ const selected=coverage.some(c=>c.bodiesRead<c.listed);
+ return [partial?'La revisión sigue incompleta.':'',
+  bodies?(selected?'Revisé los resúmenes y abrí una selección de correos.':''):'Esta revisión se basa solo en asuntos y resúmenes.',
+  coverage.some(c=>c.truncatedBodies>0)?'Parte del contenido llegó recortado.':'',
+  'No incluye Spam, Papelera ni adjuntos.'].filter(Boolean).join(' ');
 }
 
 export function createJobNotifier(db,{send,report=()=>{},intervalMs=500,autoStart=true}={}){

@@ -32,6 +32,10 @@ Los puntos abiertos son planes, no capacidades ya disponibles.
 - [ ] Evaluar la decisión de delegar con más tareas reales y afinarla.
 - [ ] Extender el seguimiento de cobertura a otras colecciones de Google.
 
+- [x] Resúmenes por tema, límites de lectura en lenguaje sencillo y contadores privados.
+- [x] Suma decimal exacta con referencias de origen y rechazo de fuentes repetidas.
+- [ ] Evaluar periódicamente prioridades y exactitud con correos reales; la suma no verifica por sí sola la extracción ni deduplica avisos con IDs diferentes.
+
 ## Fase 3 — Navegador en el Mac
 
 - [ ] Control de un navegador local con sesiones persistentes.

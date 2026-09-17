@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import { sumAmounts } from './amounts.mjs';
 import { startJob,listJobs,boundJob,updateJob,cancelJob,notifyFinding } from './jobs.mjs';
 import { initReviews,startReview,startQueryReview,listReviewPage,reviewOverviews,reviewBodies,allCoverage } from './mail-review.mjs';
 import { requestReaction, REACTION_EMOJIS } from './reactions.mjs';
@@ -32,6 +33,8 @@ function tool(name, description, inputSchema, fn) {
 // Only advertise reactions for a host-bound active iMessage turn. Desktop
 // turns have no Photon message to react to; the model cannot choose a target.
 const turnId=process.env.NARCISO_TURN_ID;
+tool('sum_amounts','Sum sourced monetary amounts exactly. Required before reporting a combined money total. One currency per call; include only amounts actually retrieved, deduplicate notifications for the same transaction, and distinguish incoming/outgoing/pending payments. Source is a transaction ID or a message ID plus line identifier. This verifies arithmetic only, not source accuracy or payment status.',
+  {currency:z.string().regex(/^[A-Z]{3}$/),items:z.array(z.object({source:z.string().min(1).max(400),amount:z.string().regex(/^-?\d{1,12}(\.\d{1,2})?$/)})).min(1).max(1000)},p=>sumAmounts(p.items,p.currency));
 if(!taskId && turnId && db.prepare("SELECT id FROM deliveries WHERE id=? AND conversation=? AND state='processing'").get(turnId,conversation)) {
   tool('react_to_owner_message',
     'Add one optional native iMessage emoji reaction to the CURRENT owner message. For a clear task, call early with 👍 (got it) or 👀 (taking a look), before the task tools. For casual messages, react only when naturally appropriate. Reactions are acknowledgment/emotion, never proof of completion. At most one per message. Do not use for bad news or sensitive concerns. No arbitrary target or text can be sent.',

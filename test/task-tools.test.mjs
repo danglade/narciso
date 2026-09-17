@@ -16,6 +16,8 @@ test('real background MCP surface cannot write, spawn tasks or change owner memo
   await client.connect(transport);const {tools}=await client.listTools();const names=tools.map(t=>t.name);
   for(const forbidden of ['task_start','task_cancel','task_update','memory_remember','gmail_search','react_to_owner_message'])assert.equal(names.includes(forbidden),false);
   assert.equal(names.some(n=>n.startsWith('prepare_')),false);assert.ok(names.includes('gmail_review_day'));assert.ok(names.includes('gmail_review_query'));assert.ok(names.includes('task_notify'));
+  const total=await client.callTool({name:'sum_amounts',arguments:{currency:'USD',items:[{source:'a',amount:'0.1'},{source:'b',amount:'0.2'}]}});
+  assert.equal(JSON.parse(total.content[0].text).total,'0.30');
   let refused=false;try{const r=await client.callTool({name:'prepare_gmail_archive',arguments:{messageId:'fake'}});refused=!!r.isError;}catch{refused=true;}assert.equal(refused,true);
  }finally{await client.close();db.close();rmSync(dir,{recursive:true,force:true});}
 });

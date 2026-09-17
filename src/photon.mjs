@@ -6,7 +6,7 @@ import { local, owner, normalizePhone } from './config.mjs';
 import { openStore, acceptDelivery } from './store.mjs';
 import { prepareInput, describeInput, MediaError } from './media.mjs';
 import { handle } from './assistant.mjs';
-import { acceptedMessage, chunks } from './photon-policy.mjs';
+import { acceptedMessage, chunks, summaryChunks } from './photon-policy.mjs';
 import { recoverJobs } from './jobs.mjs';
 import { createJobRunner,createJobNotifier } from './job-runner.mjs';
 import { reactionPump } from './reactions.mjs';
@@ -43,13 +43,13 @@ let stopping=false;
 const queue=serialQueue();
 const outgoing=serialQueue();
 async function withDeadline(promise){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Photon operation timed out')),15000);})]);}finally{clearTimeout(timer);}}
-async function sendChunks(space,body){for(const chunk of chunks(body))await withDeadline(space.send(text(chunk)));}
+async function sendChunks(space,body,split=chunks){for(const chunk of split(body))await withDeadline(space.send(text(chunk)));}
 const jobReport=(event,taskId)=>console.log(JSON.stringify({event,taskId,time:new Date().toISOString()}));
 const runner=createJobRunner(db,{report:jobReport});
 const notifier=createJobNotifier(db,{report:jobReport,send:async(conversation,body)=>{
   const space=await withDeadline(imessage(app).space.get(conversation));
   if(space.type!=='dm')throw new Error('Background destination is not a DM');
-  await outgoing.add(()=>sendChunks(space,body));
+  await outgoing.add(()=>sendChunks(space,body,summaryChunks));
 }});
 async function shutdown() {
   if(stopping)return; stopping=true;

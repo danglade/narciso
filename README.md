@@ -49,7 +49,7 @@ El control del navegador local todavía está pendiente.
     cambio aprobado, y ocasionalmente ❤️, 😂, 🎉 o 💪 según el contexto.
     Máximo una reacción por mensaje; nunca significa que la tarea terminó.
 12. **CLI de escritorio y diagnóstico.** Conversación desde terminal, comando
-    `doctor`, trazas privadas con retención limitada y 30 pruebas automatizadas.
+    `doctor`, trazas privadas con retención limitada y 33 pruebas automatizadas.
 
 13. **Tareas independientes.** Narciso decide cuándo delegar una investigación
     y acusa su recepción. Un trabajador de fondo continúa con su propio contexto
@@ -59,6 +59,12 @@ El control del navegador local todavía está pendiente.
     horaria y conteos de IDs únicos. Distingue mensajes encontrados, resúmenes
     consultados y cuerpos leídos; una revisión con páginas o resúmenes pendientes
     no puede terminar con estado `completed`.
+
+15. **Resúmenes para decidir.** Prioridad por consecuencia, párrafos breves por
+    tema en burbujas separadas y limitaciones expresadas en lenguaje sencillo.
+    Los contadores detallados quedan en el diagnóstico. Herramienta de suma
+    decimal exacta con fuentes para comprobar totales; verifica la aritmética
+    de los importes aportados, no la legitimidad ni liquidación de transacciones.
 
 Probado en una instalación personal de Apple Silicon: acceso de lectura a los
 seis servicios de Google, iMessage completo, lectura antes de la respuesta,

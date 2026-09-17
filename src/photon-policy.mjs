@@ -22,3 +22,11 @@ export function chunks(text, max = 3500) {
   if(text) result.push(text);
   return result;
 }
+
+// Topic paragraphs become separate bubbles for completed investigations.
+// Limit deliberate bubble splitting; preserve all remaining text and Unicode.
+export function summaryChunks(text) {
+  const paragraphs=text.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean);
+  const groups=[...paragraphs.slice(0,5),paragraphs.slice(5).join('\n\n')].filter(Boolean);
+  return groups.flatMap(group=>chunks(group));
+}
