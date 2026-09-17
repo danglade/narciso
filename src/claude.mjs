@@ -5,6 +5,13 @@ import { root, local, timezone } from './config.mjs';
 import { createTrace } from './trace.mjs';
 import { replySchema, replyStream } from './reply-stream.mjs';
 
+export function modelProfile(taskId, env = process.env) {
+  const model = (taskId ? env.NARCISO_TASK_MODEL : env.NARCISO_CHAT_MODEL) || 'claude-opus-5';
+  const effort = (taskId ? env.NARCISO_TASK_EFFORT : env.NARCISO_CHAT_EFFORT) || (taskId ? 'xhigh' : 'high');
+  if (!['low', 'medium', 'high', 'xhigh', 'max'].includes(effort)) throw new Error('Invalid Narciso effort level.');
+  return {model, effort};
+}
+
 export function claudeEnvironment(conversation, turnId, taskId) {
   // Let the official CLI read its own account credentials. Do not pass API
   // keys, alternate providers, Photon secrets, or arbitrary shell settings.
@@ -70,15 +77,17 @@ unrelated arithmetic while that runs → "68.".
 The reply field is the message itself, not commentary about composing the message.`;
   const mcp = { mcpServers: { narciso: { command: process.execPath,
     args: [resolve(root, 'src/mcp.mjs')] } } };
-  const args = ['-p', '--input-format', 'stream-json', '--output-format', 'stream-json', '--verbose',
+  const profile = modelProfile(options.taskId);
+  const args = ['--model', profile.model, '--effort', profile.effort, '-p', '--input-format', 'stream-json', '--output-format', 'stream-json', '--verbose',
     '--json-schema', JSON.stringify(options.schema || replySchema), '--no-session-persistence',
-    '--restricted', '--setting-sources', '', '--settings', '{"disableAllHooks":true}',
+    '--restricted', '--setting-sources', '', '--settings', '{"disableAllHooks":true,"alwaysThinkingEnabled":true}',
     '--disable-slash-commands', '--no-chrome', '--tools', '',
     '--strict-mcp-config', '--mcp-config', JSON.stringify(mcp),
     '--allowedTools', 'mcp__narciso__*', '--permission-mode', 'dontAsk',
     '--system-prompt', system];
   return new Promise((accept, reject) => {
     const trace=createTrace({conversation,turnId});
+    trace.append('model_configuration',profile);
     console.error(JSON.stringify({event:'claude_trace',traceId:trace.id}));
     const child = spawn(process.env.NARCISO_CLAUDE_BIN || 'claude', args,
       { cwd: workdir, env: claudeEnvironment(conversation,turnId,options.taskId), stdio: ['pipe', 'pipe', 'pipe'] });

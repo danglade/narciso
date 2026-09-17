@@ -21,7 +21,9 @@ El control del navegador local todavía está pendiente.
    autorizado, cola de tareas, historial persistente y detección de duplicados.
 3. **Claude Code con suscripción.** Usa el CLI oficial con la sesión del
    propietario. Sin extraer credenciales OAuth, sin API key y sin fallback
-   automático a llamadas de API de pago. Aplican los límites de la cuenta.
+   automático a llamadas de API de pago. Opus 5 con esfuerzo `high` en el chat
+   y `xhigh` para investigaciones; ambos configurables en `.env`. Aplican los
+   límites de la cuenta; un esfuerzo mayor puede consumir más cupo y tiempo.
 4. **Personalidad y contexto.** [SOUL.md](SOUL.md) define tono, iniciativa y
    límites. [CONTEXT.example.md](CONTEXT.example.md) es la plantilla del contexto
    privado. Memoria de preferencias confirmadas, con su fuente.
