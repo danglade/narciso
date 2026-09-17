@@ -108,6 +108,17 @@ compartir errores. Un correo no prueba por sí solo la realidad del hecho report
 
 ## Por dónde continuar
 
+Prueba posterior de caja negra por WhatsApp:
+[instinct-behavior-evaluation.md](instinct-behavior-evaluation.md). Incluye
+correcciones de contexto, una pregunta intercalada durante investigación y
+entrega autónoma. Es comportamiento observado, no evidencia de su arquitectura
+interna. La repetición aislada con Claude real en Narciso encontró y corrigió
+consejos sobre asuntos resueltos, informes no verificados ante falta de web y
+peticiones explícitas de segundo plano resueltas en el chat. Pasaron 18 controles
+de comportamiento y las 52 pruebas existentes; no se cambió modelo/esfuerzo.
+La comparación web no es equivalente porque Narciso aún carece de navegador.
+El nuevo recorrido no se ha probado por iMessage; la evaluación usa entrega local.
+
 1. **Mantener la evaluación de selección y naturalidad.** Reutilizar evidencia ya capturada para
    comparar redacciones sin volver a leer Gmail en cada iteración. Menos IPs,
    horas exactas, versiones, nombres y salvedades incidentales. Conservar lo que

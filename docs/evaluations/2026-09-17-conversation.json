@@ -1,0 +1,253 @@
+{
+  "baseline": {
+    "date": "2026-09-17T23:14:35.145Z",
+    "isolation": "temporary runtime, public context, no Google tokens, no Photon",
+    "turns": [
+      {
+        "label": "priority",
+        "input": "Quiero probar un caso ficticio contigo, sin acceder a cuentas ni ejecutar acciones. Imagina que hoy llegaron estos correos: un acceso a CloudNest desde un dispositivo que no reconozco; una factura de Acme por $240 que vence mañana; un reclutador que pide mi disponibilidad, sin fecha límite; un recibo de una compra que sí reconozco; y 30 newsletters. ¿Qué merece mi atención y qué harías después?",
+        "reply": "Con esos cinco, dos importan y el resto es ruido.\n\nPrimero el acceso a CloudNest. Es lo único que puede empeorar solo si no lo miras. La pregunta concreta: ¿estuviste entrando a CloudNest desde un móvil, una tablet o una red distinta hoy? Si el correo trae dispositivo, ciudad y hora, eso suele resolverlo en diez segundos. Si no lo reconoces, el orden es cerrar sesiones activas, cambiar la contraseña y activar 2FA desde el portal de CloudNest, y eso lo tienes que hacer tú: no tengo control de navegador.\n\nSegundo, la factura de Acme, $240, vence mañana. Ahí el riesgo es un recargo o un corte de servicio por una cifra chica. Lo útil es abrir el correo, confirmar que el monto y el número de factura coinciden con lo que esperas (y que el enlace de pago sea del dominio real de Acme, no un lookalike), y pagarla hoy en vez de mañana a última hora.\n\nEl reclutador puede esperar. Sin fecha límite no es urgencia, es una tarea de dos minutos cuando quieras: le mandas dos o tres franjas y listo. Yo te preparo el borrador cuando decidas horarios. El recibo que reconoces no pide nada más que archivarlo, y las 30 newsletters no merecen un párrafo; si varias son suscripciones que ya no lees, vale la pena una limpieza aparte.\n\nUn detalle real, no del caso: ahora mismo no hay ninguna cuenta de Google conectada, así que si mañana esto deja de ser ficticio necesito que conectes Gmail para poder leer los correos y sacar los datos yo mismo.",
+        "durationMs": 9289
+      },
+      {
+        "label": "correction",
+        "input": "Seguimos con el caso ficticio: el acceso a CloudNest sí fui yo y la factura de Acme ya está pagada. Tengo dos minutos; ¿qué queda que merezca mi atención?",
+        "reply": "Con eso, casi nada. Queda el reclutador, y es justo una tarea de dos minutos: mándale dos o tres franjas horarias y cierras el tema. Si me dices qué días te sirven, te dejo el borrador listo.\n\nLo demás no pide nada hoy: el recibo se archiva y las newsletters pueden esperar a una limpieza cuando tengas media hora.\n\nUn apunte sobre CloudNest: si ese acceso fue desde un dispositivo nuevo que vas a seguir usando, vale la pena marcarlo como de confianza para no volver a dudar la próxima vez.",
+        "durationMs": 3597
+      },
+      {
+        "label": "unavailable_web",
+        "input": "Ahora una investigación real, solo de lectura: busca en la documentación oficial de Playwright y Chrome qué conviene para un asistente personal en un Mac que necesita conservar sesiones y dejarme intervenir cuando aparece un CAPTCHA o MFA. Compara un perfil persistente dedicado con conectarse a un Chrome ya abierto. Quiero tu recomendación, las 3 limitaciones más importantes y enlaces a las fuentes. No instales ni cambies nada.",
+        "reply": "Antes que nada, el límite real: no tengo acceso a web ni navegador, así que no puedo abrir hoy la documentación de Playwright ni la de Chrome. Lo que sigue es de mi conocimiento del tema, no una lectura verificada de las fuentes; te dejo los enlaces para que los contrastes.\n\nRecomendación: perfil persistente dedicado. Es decir, launchPersistentContext con un userDataDir propio del asistente (algo como ~/narciso/chrome-profile), channel \"chrome\" y modo headed. Conserva cookies, localStorage y sesiones entre ejecuciones sin que tengas que reautenticarte, y como es una ventana real puedes tomar el teclado y resolver el CAPTCHA o el MFA a mano mientras el script espera. Conectarse a tu Chrome de diario por CDP suena cómodo, pero en la práctica se cae: desde Chrome 136 el flag --remote-debugging-port ya no funciona sobre el perfil por defecto, así que igual acabas creando un perfil aparte, y además le darías al agente acceso a todas tus sesiones abiertas y cualquier cierre tuyo de Chrome mata la automatización.\n\nLas tres limitaciones que más te van a doler:\n\nUn userDataDir solo admite un proceso a la vez. Nada de correr dos flujos en paralelo sobre el mismo perfil, y si algo revienta te queda un lock que hay que limpiar a mano. El perfil también acumula estado, así que los runs dejan de ser reproducibles.\n\nLa intervención humana no es una función de producto. page.pause() y el Inspector son herramientas de depuración, no un \"espera a que el humano termine el MFA\". Esa lógica la tienes que escribir tú: esperar un selector posterior al login con timeout largo y avisarme cuando aparezca el reto.\n\nCDP es un canal de control local sin autenticación sobre un navegador con tus sesiones iniciadas, y connectOverCDP solo cubre navegadores Chromium y con soporte parcial de algunas funciones de Playwright. Como modelo de seguridad para un asistente que corre solo en el Mac Mini, es peor que el perfil aislado.\n\nEnlaces a verificar (de memoria, pueden haber cambiado): playwright.dev/docs/api/class-browsertype (launchPersistentContext y connectOverCDP), playwright.dev/docs/auth, playwright.dev/docs/browsers para channel \"chrome\", playwright.dev/docs/debug para el Inspector, y el post del blog de Chrome sobre el cambio de --remote-debugging-port en Chrome 136 en developer.chrome.com/blog.\n\nSi quieres, cuando conectes una cuenta o me des acceso a web hago la verificación real y te marco qué de esto sigue vigente.",
+        "durationMs": 15863
+      },
+      {
+        "label": "context_recall",
+        "input": "Volviendo al caso ficticio anterior: ¿qué había quedado pendiente?",
+        "reply": "Quedaba solo el reclutador: mandarle dos o tres franjas de disponibilidad. Dime qué días te sirven y te dejo el borrador.\n\nLo demás ya estaba cerrado: el acceso a CloudNest lo confirmaste tú, la factura de Acme pagada, el recibo a archivar y las 30 newsletters para una limpieza cuando tengas rato.",
+        "durationMs": 2943
+      },
+      {
+        "label": "background_ack",
+        "input": "Revisa en segundo plano este lote ficticio de avisos, sin acceder a cuentas ni ejecutar cambios. Deduplica por ID y separa pagos recibidos de pendientes. Contrasta el digest y dime solo lo que merece atención, con total exacto de lo recibido. Los datos están completos para este ejercicio; no hay que consultar Gmail.\nAviso A01: pago recibido USD 110.00.\nAviso A02: pago recibido USD 80.00.\nAviso A03: pago recibido USD 110.00.\nAviso A04: pago recibido USD 135.00.\nAviso A05: pago recibido USD 110.00.\nAviso A06: pago recibido USD 50.00.\nAviso A07: pago recibido USD 160.00.\nAviso A08: pago recibido USD 110.00.\nAviso A09: pago recibido USD 110.00.\nAviso A10: pago recibido USD 110.00.\nReenvío A01: pago recibido USD 110.00; duplicado del mismo pago, no otro ingreso.\nAviso P01: pago pendiente USD 75.00; no recibido.\nDigest D01: afirma 10 pagos recibidos por USD 1105.00; no contiene otras transacciones.\nOperaciones: falló la limpieza nocturna de Atlas; no consta causa ni impacto.\nPromociones: 30 newsletters sin vencimientos ni solicitudes directas.\nNo programes seguimientos. No sumes el digest ni el reenvío como pagos nuevos.",
+        "reply": "Lo hice aquí mismo: son diez avisos con los datos ya dados, no hace falta un hilo aparte.\n\nEl total recibido es USD 1085.00, sumando A01–A10. El reenvío de A01 y el pendiente P01 quedan fuera.\n\nEso deja una discrepancia real: el digest D01 dice USD 1105.00 sobre los mismos 10 pagos, o sea 20 dólares de más. Los avisos individuales coinciden entre sí, así que el que está mal es el digest. Vale la pena mirar de dónde sale esa cifra antes de usarla para conciliar nada.\n\nAparte, USD 75.00 de P01 siguen pendientes, no recibidos, y la limpieza nocturna de Atlas falló sin causa ni impacto registrados. Ese fallo es lo segundo que pediría revisar: un job que revienta sin log no dice si perdiste datos o solo tiempo.\n\nEl resto no pide nada: el duplicado de A01 está identificado y las 30 newsletters no traen vencimientos.\n\nUn matiz: verifiqué la aritmética, no los pagos. Que los avisos digan \"recibido\" no confirma que el dinero esté acreditado.",
+        "durationMs": 8461
+      }
+    ],
+    "events": [
+      {
+        "kind": "turn_start",
+        "elapsedMs": 1,
+        "label": "priority"
+      },
+      {
+        "kind": "turn_complete",
+        "elapsedMs": 9290,
+        "label": "priority"
+      },
+      {
+        "kind": "turn_start",
+        "elapsedMs": 9291,
+        "label": "correction"
+      },
+      {
+        "kind": "turn_complete",
+        "elapsedMs": 12888,
+        "label": "correction"
+      },
+      {
+        "kind": "turn_start",
+        "elapsedMs": 12889,
+        "label": "unavailable_web"
+      },
+      {
+        "kind": "turn_complete",
+        "elapsedMs": 28751,
+        "label": "unavailable_web"
+      },
+      {
+        "kind": "turn_start",
+        "elapsedMs": 28752,
+        "label": "context_recall"
+      },
+      {
+        "kind": "turn_complete",
+        "elapsedMs": 31694,
+        "label": "context_recall"
+      },
+      {
+        "kind": "turn_start",
+        "elapsedMs": 31695,
+        "label": "background_ack"
+      },
+      {
+        "kind": "turn_complete",
+        "elapsedMs": 40156,
+        "label": "background_ack"
+      }
+    ],
+    "checks": {
+      "noUnsupportedWebJob": true,
+      "webLimitationExpressed": true,
+      "pendingRecruiterRecalled": true,
+      "backgroundSaved": false,
+      "briefAcknowledgment": false,
+      "noInternalIds": true,
+      "noGoogleApprovals": true
+    },
+    "toolNames": [
+      "StructuredOutput",
+      "mcp__narciso__react_to_owner_message",
+      "mcp__narciso__sum_amounts"
+    ],
+    "pass": false
+  },
+  "final": {
+    "date": "2026-09-17T23:18:12.723Z",
+    "isolation": "temporary runtime, public context, no Google tokens, no Photon",
+    "turns": [
+      {
+        "label": "priority",
+        "input": "Quiero probar un caso ficticio contigo, sin acceder a cuentas ni ejecutar acciones. Imagina que hoy llegaron estos correos: un acceso a CloudNest desde un dispositivo que no reconozco; una factura de Acme por $240 que vence mañana; un reclutador que pide mi disponibilidad, sin fecha límite; un recibo de una compra que sí reconozco; y 30 newsletters. ¿Qué merece mi atención y qué harías después?",
+        "reply": "Ejercicio ficticio, va mi lectura.\n\nPrimero el acceso a CloudNest. Es lo único que puede empeorar solo: si no reconoces el dispositivo, cambias la contraseña, cierras sesiones activas y activas 2FA. ¿Recuerdas haber entrado desde otro equipo o desde otra red esos días?\n\nSegundo la factura de Acme, $240 con vencimiento mañana. Es un plazo real y chico: confirmar el monto contra la factura original y pagarla hoy o mañana temprano.\n\nEl reclutador no tiene fecha límite: responde cuando quieras esta semana, en dos líneas con tu disponibilidad. El recibo reconocido no necesita nada, y los 30 newsletters tampoco.\n\nSi esto fuera real, el orden sería: CloudNest, luego Acme, después el reclutador.",
+        "durationMs": 3853
+      },
+      {
+        "label": "correction",
+        "input": "Seguimos con el caso ficticio: el acceso a CloudNest sí fui yo y la factura de Acme ya está pagada. Tengo dos minutos; ¿qué queda que merezca mi atención?",
+        "reply": "Queda solo el reclutador, y sin fecha límite: dos líneas con tu disponibilidad cuando tengas un rato esta semana. El recibo y los newsletters no piden nada.",
+        "durationMs": 2976
+      },
+      {
+        "label": "unavailable_web",
+        "input": "Ahora una investigación real, solo de lectura: busca en la documentación oficial de Playwright y Chrome qué conviene para un asistente personal en un Mac que necesita conservar sesiones y dejarme intervenir cuando aparece un CAPTCHA o MFA. Compara un perfil persistente dedicado con conectarse a un Chrome ya abierto. Quiero tu recomendación, las 3 limitaciones más importantes y enlaces a las fuentes. No instales ni cambies nada.",
+        "reply": "No puedo hacerlo: no tengo navegador ni acceso web, así que no podría leer la documentación de Playwright ni la de Chrome, y no quiero darte enlaces de memoria como si los hubiera verificado.\n\nSi me pegas aquí las páginas relevantes (o su texto), las comparo y te doy la recomendación con las limitaciones concretas.",
+        "durationMs": 3929
+      },
+      {
+        "label": "context_recall",
+        "input": "Volviendo al caso ficticio anterior: ¿qué había quedado pendiente?",
+        "reply": "Solo el reclutador: responderle con tu disponibilidad, sin fecha límite. Lo demás quedó cerrado.",
+        "durationMs": 2157
+      },
+      {
+        "label": "background_ack",
+        "input": "Revisa en segundo plano este lote ficticio de avisos, sin acceder a cuentas ni ejecutar cambios. Deduplica por ID y separa pagos recibidos de pendientes. Contrasta el digest y dime solo lo que merece atención, con total exacto de lo recibido. Los datos están completos para este ejercicio; no hay que consultar Gmail.\nAviso A01: pago recibido USD 110.00.\nAviso A02: pago recibido USD 80.00.\nAviso A03: pago recibido USD 110.00.\nAviso A04: pago recibido USD 135.00.\nAviso A05: pago recibido USD 110.00.\nAviso A06: pago recibido USD 50.00.\nAviso A07: pago recibido USD 160.00.\nAviso A08: pago recibido USD 110.00.\nAviso A09: pago recibido USD 110.00.\nAviso A10: pago recibido USD 110.00.\nReenvío A01: pago recibido USD 110.00; duplicado del mismo pago, no otro ingreso.\nAviso P01: pago pendiente USD 75.00; no recibido.\nDigest D01: afirma 10 pagos recibidos por USD 1105.00; no contiene otras transacciones.\nOperaciones: falló la limpieza nocturna de Atlas; no consta causa ni impacto.\nPromociones: 30 newsletters sin vencimientos ni solicitudes directas.\nNo programes seguimientos. No sumes el digest ni el reenvío como pagos nuevos.",
+        "reply": "Dale, lo reviso aparte y te paso lo que merece atención con el total verificado.",
+        "durationMs": 7839
+      },
+      {
+        "label": "interleaved_arithmetic",
+        "input": "Mientras tanto, ¿cuánto es 17 por 4?",
+        "reply": "68.",
+        "durationMs": 2607
+      }
+    ],
+    "events": [
+      {
+        "kind": "turn_start",
+        "elapsedMs": 0,
+        "label": "priority"
+      },
+      {
+        "kind": "turn_complete",
+        "elapsedMs": 3853,
+        "label": "priority"
+      },
+      {
+        "kind": "turn_start",
+        "elapsedMs": 3854,
+        "label": "correction"
+      },
+      {
+        "kind": "turn_complete",
+        "elapsedMs": 6829,
+        "label": "correction"
+      },
+      {
+        "kind": "turn_start",
+        "elapsedMs": 6830,
+        "label": "unavailable_web"
+      },
+      {
+        "kind": "turn_complete",
+        "elapsedMs": 10759,
+        "label": "unavailable_web"
+      },
+      {
+        "kind": "turn_start",
+        "elapsedMs": 10760,
+        "label": "context_recall"
+      },
+      {
+        "kind": "turn_complete",
+        "elapsedMs": 12916,
+        "label": "context_recall"
+      },
+      {
+        "kind": "turn_start",
+        "elapsedMs": 12917,
+        "label": "background_ack"
+      },
+      {
+        "kind": "turn_complete",
+        "elapsedMs": 20756,
+        "label": "background_ack"
+      },
+      {
+        "kind": "turn_start",
+        "elapsedMs": 20792,
+        "label": "interleaved_arithmetic"
+      },
+      {
+        "kind": "turn_complete",
+        "elapsedMs": 23399,
+        "label": "interleaved_arithmetic"
+      },
+      {
+        "kind": "task_completed",
+        "elapsedMs": 53650
+      },
+      {
+        "kind": "result_delivered",
+        "elapsedMs": 53651
+      }
+    ],
+    "checks": {
+      "shortTriage": true,
+      "shortCorrection": true,
+      "noReopenedDeviceAdvice": true,
+      "noUnsupportedWebJob": true,
+      "webLimitationExpressed": true,
+      "noUnverifiedReplacementReport": true,
+      "pendingRecruiterRecalled": true,
+      "noRoutineCleanupInvented": true,
+      "backgroundSaved": true,
+      "briefAcknowledgment": true,
+      "workerRunningBeforeQuestion": true,
+      "arithmeticOnly": true,
+      "questionFinishedBeforeResearch": true,
+      "researchCompleted": true,
+      "exactTotal": true,
+      "resultDelivered": true,
+      "noInternalIds": true,
+      "noGoogleApprovals": true
+    },
+    "background": {
+      "state": "completed",
+      "result": "El lote reporta diez pagos recibidos por un total verificado de USD 1085.00 (A01–A10), ya sin el reenvío duplicado ni el pago pendiente.\n\nEl digest D01 afirma 10 pagos por USD 1105.00, es decir USD 20.00 más que la suma de los avisos individuales. Esa diferencia no se apoya en ninguna transacción adicional del lote; el total respaldado por los avisos es USD 1085.00.\n\nEl reenvío de A01 repite el mismo pago de USD 110.00 y no es un ingreso nuevo. P01, de USD 75.00, figura como PENDIENTE: no está recibido y queda fuera del total.\n\nAparte del dinero, falló la limpieza nocturna de Atlas; la fuente no indica causa ni impacto.",
+      "steps": 1
+    },
+    "deliveries": [
+      "El lote reporta diez pagos recibidos por un total verificado de USD 1085.00 (A01–A10), ya sin el reenvío duplicado ni el pago pendiente.\n\nEl digest D01 afirma 10 pagos por USD 1105.00, es decir USD 20.00 más que la suma de los avisos individuales. Esa diferencia no se apoya en ninguna transacción adicional del lote; el total respaldado por los avisos es USD 1085.00.\n\nEl reenvío de A01 repite el mismo pago de USD 110.00 y no es un ingreso nuevo. P01, de USD 75.00, figura como PENDIENTE: no está recibido y queda fuera del total.\n\nAparte del dinero, falló la limpieza nocturna de Atlas; la fuente no indica causa ni impacto."
+    ],
+    "toolNames": [
+      "StructuredOutput",
+      "mcp__narciso__evidence_get",
+      "mcp__narciso__react_to_owner_message",
+      "mcp__narciso__sum_amounts",
+      "mcp__narciso__task_start"
+    ],
+    "pass": true
+  }
+}
