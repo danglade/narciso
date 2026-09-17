@@ -13,6 +13,9 @@ transcripción de audio viven en el Mac. Claude procesa el modelo en remoto a
 través de Claude Code; Photon conecta iMessage y Google aporta sus APIs.
 El control del navegador local todavía está pendiente.
 
+Para continuar el desarrollo: [documento de continuidad](docs/HANDOFF.md)
+(estado, validaciones, pendientes y pasos para retomar).
+
 ## Lo que ya hicimos
 
 1. **Servicio en el Mac Mini.** Proceso supervisado por `launchd`, reinicio
