@@ -51,7 +51,7 @@ const event = z.object({ calendarId: id, summary: z.string().min(1).max(500),
   description: z.string().max(5000).optional() }).strict()
   .refine(p => new Date(p.end) > new Date(p.start), 'End must follow start.');
 export const readSchemas = {
-  gmail_search: z.object({ query, limit: z.number().int().min(1).max(20).default(10) }).strict(),
+  gmail_search: z.object({ query, limit: z.number().int().min(1).max(100).default(20), pageToken:z.string().max(2000).optional() }).strict(),
   gmail_read: z.object({ messageId: id }).strict(),
   calendar_list: z.object({}).strict(),
   calendar_events: z.object({ calendarId: id.default('primary'), timeMin: z.string().datetime({offset:true}), timeMax: z.string().datetime({offset:true}) }).strict(),
@@ -90,7 +90,7 @@ export async function readGoogle(action, parameters) {
   const gmail = google.gmail({ version: 'v1', auth });
   let result;
   switch (action) {
-    case 'gmail_search': result = await gmail.users.messages.list({ userId: 'me', q: p.query, maxResults: p.limit }); break;
+    case 'gmail_search': result = await gmail.users.messages.list({ userId: 'me', q: p.query, maxResults: p.limit, pageToken:p.pageToken }); break;
     case 'gmail_read': result = await gmail.users.messages.get({ userId: 'me', id: p.messageId, format: 'full' }); break;
     case 'calendar_list': result = await google.calendar({version:'v3', auth}).calendarList.list({maxResults:100}); break;
     case 'calendar_events': result = await google.calendar({version:'v3', auth}).events.list({ ...p, singleEvents:true, orderBy:'startTime', maxResults:100 }); break;
@@ -100,6 +100,7 @@ export async function readGoogle(action, parameters) {
     case 'docs_read': result = await google.docs({version:'v1',auth}).documents.get({documentId:p.documentId, includeTabsContent:true}); break;
     case 'sheets_read': result = await google.sheets({version:'v4',auth}).spreadsheets.values.get(p); break;
   }
+  if(action==='gmail_search')return {messages:result.data.messages||[],returnedCount:result.data.messages?.length||0,nextPageToken:result.data.nextPageToken||null,estimatedTotal:result.data.resultSizeEstimate,isEstimate:true,warning:'These are message IDs only, not read messages. estimatedTotal is NOT a verified count. Follow nextPageToken or use a background gmail_review_day for exhaustive reviews.'};
   if (action === 'gmail_read') {
     const decode = part => ({ mimeType: part.mimeType,
       text: part.body?.data ? Buffer.from(part.body.data,'base64url').toString('utf8') : undefined,

@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { chmodSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { local } from './config.mjs';
+import { initJobs } from './jobs.mjs';
 
 export function openStore(path = resolve(local, 'narciso.sqlite')) {
   const db = new DatabaseSync(path);
@@ -33,6 +34,7 @@ export function openStore(path = resolve(local, 'narciso.sqlite')) {
     db.exec(`INSERT OR IGNORE INTO inbound_requests SELECT id, request FROM deliveries WHERE request IS NOT NULL;
       ALTER TABLE deliveries DROP COLUMN request;`);
   }
+  initJobs(db);
   return db;
 }
 export function acceptDelivery(db, id, conversation, body) {
@@ -58,10 +60,11 @@ export function saveMessage(db, id, conversation, role, body) {
   db.prepare('INSERT OR IGNORE INTO messages VALUES (?, ?, ?, ?, ?)')
     .run(id, conversation, role, body, Date.now());
 }
-export function prepare(db, conversation, action, parameters) {
+export function prepare(db, conversation, action, parameters, turnId) {
   const code = randomBytes(4).toString('hex').toUpperCase();
   db.prepare('INSERT INTO approvals VALUES (?, ?, ?, ?, ?, ?)')
     .run(code, conversation, action, JSON.stringify(parameters), 'pending', Date.now());
+  if(turnId)db.prepare('INSERT INTO approval_origins VALUES (?,?)').run(code,turnId);
   return { code, action, parameters, instruction: `approve ${code}`, expiresIn: '30 minutes' };
 }
 export function claimApproval(db, conversation, code, now = Date.now()) {

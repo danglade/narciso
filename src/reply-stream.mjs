@@ -20,7 +20,7 @@ export function extractReply(event) {
 
 // Stream events are diagnostics only. Never assemble user messages from text
 // deltas, assistant commentary, thinking blocks, or the unstructured result.
-export function replyStream(onEvent) {
+export function replyStream(onEvent, extract = extractReply) {
   const decoder=new StringDecoder('utf8');
   let pending=''; let bytes=0; let result; let resultCount=0;
   function lines(chunk) {
@@ -44,7 +44,7 @@ export function replyStream(onEvent) {
       lines(decoder.end());
       if(pending.trim())lines('\n');
       if(resultCount!==1)throw new Error('Claude Code returned an incomplete or ambiguous result.');
-      return extractReply(result);
+      return extract(result);
     },
   };
 }

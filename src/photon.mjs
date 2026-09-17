@@ -7,6 +7,8 @@ import { openStore, acceptDelivery } from './store.mjs';
 import { prepareInput, describeInput, MediaError } from './media.mjs';
 import { handle } from './assistant.mjs';
 import { acceptedMessage, chunks } from './photon-policy.mjs';
+import { recoverJobs } from './jobs.mjs';
+import { createJobRunner,createJobNotifier } from './job-runner.mjs';
 import { reactionPump } from './reactions.mjs';
 import { acknowledgeRead, serialQueue } from './receipts.mjs';
 
@@ -29,6 +31,7 @@ db.prepare('INSERT OR IGNORE INTO runtime VALUES (?,?)').run('activated_at',Stri
 const activatedAt=Number(db.prepare('SELECT value FROM runtime WHERE key=?').get('activated_at').value);
 db.prepare("UPDATE deliveries SET state='needs_review' WHERE state IN ('queued','processing','sending')").run();
 db.prepare("UPDATE message_reactions SET state='needs_review' WHERE state IN ('pending','sending')").run();
+recoverJobs(db);
 const connectionDeadline=setTimeout(()=>{
   console.error('Photon startup timed out; supervisor will retry.'); process.exit(1);
 },45000);
@@ -38,10 +41,20 @@ clearTimeout(connectionDeadline);
 console.log(JSON.stringify({event:'narciso_connected',time:new Date().toISOString(),pid:process.pid}));
 let stopping=false;
 const queue=serialQueue();
+const outgoing=serialQueue();
+async function withDeadline(promise){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Photon operation timed out')),15000);})]);}finally{clearTimeout(timer);}}
+async function sendChunks(space,body){for(const chunk of chunks(body))await withDeadline(space.send(text(chunk)));}
+const jobReport=(event,taskId)=>console.log(JSON.stringify({event,taskId,time:new Date().toISOString()}));
+const runner=createJobRunner(db,{report:jobReport});
+const notifier=createJobNotifier(db,{report:jobReport,send:async(conversation,body)=>{
+  const space=await withDeadline(imessage(app).space.get(conversation));
+  if(space.type!=='dm')throw new Error('Background destination is not a DM');
+  await outgoing.add(()=>sendChunks(space,body));
+}});
 async function shutdown() {
   if(stopping)return; stopping=true;
   const kill=setTimeout(()=>process.exit(0),5000); kill.unref();
-  await queue.idle(); await app.stop(); process.exit(0);
+  await Promise.all([runner.stop(),notifier.stop(),queue.idle()]); await outgoing.idle(); await app.stop(); process.exit(0);
 }
 process.on('SIGTERM',shutdown); process.on('SIGINT',shutdown);
 try {
@@ -70,17 +83,18 @@ try {
         }
         await reactions.stop();
         db.prepare("UPDATE deliveries SET state='sending',response=? WHERE id=?").run(response,deliveryId);
-        for(const chunk of chunks(response)) await space.send(text(chunk));
+        await outgoing.add(()=>sendChunks(space,response));
         db.prepare("UPDATE deliveries SET state='sent' WHERE id=?").run(deliveryId);
         report('response_sent');
       } catch {
         await reactions.stop();
         const state=db.prepare('SELECT state FROM deliveries WHERE id=?').get(deliveryId).state;
         db.prepare("UPDATE deliveries SET state='needs_review' WHERE id=?").run(deliveryId);
+        db.prepare("UPDATE jobs SET state='blocked',result='No pude confirmar el acuse de esta tarea. Pídeme retomarla.',updated=? WHERE origin=? AND state='waiting_ack'").run(Date.now(),deliveryId);
         console.error(JSON.stringify({event:'turn_needs_review',deliveryId,stage:state,time:new Date().toISOString()}));
         // Never retry an ambiguous send; that can create duplicate messages.
         if(state==='processing') {
-          try {await space.send(text('I couldn’t finish that request. Your task is saved, but I haven’t confirmed completion. Please try again or check Narciso on the Mac.'));}catch{}
+          try {await outgoing.add(()=>space.send(text('I couldn’t finish that request. Your task is saved, but I haven’t confirmed completion. Please try again or check Narciso on the Mac.')));}catch{}
         }
       }
     }).catch(()=>report('queue_job_failed'));

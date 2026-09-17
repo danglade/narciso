@@ -47,7 +47,16 @@ El control del navegador local todavía está pendiente.
     cambio aprobado, y ocasionalmente ❤️, 😂, 🎉 o 💪 según el contexto.
     Máximo una reacción por mensaje; nunca significa que la tarea terminó.
 12. **CLI de escritorio y diagnóstico.** Conversación desde terminal, comando
-    `doctor`, trazas privadas con retención limitada y 19 pruebas automatizadas.
+    `doctor`, trazas privadas con retención limitada y 30 pruebas automatizadas.
+
+13. **Tareas independientes.** Narciso decide cuándo delegar una investigación
+    y acusa su recepción. Un trabajador de fondo continúa con su propio contexto
+    y checkpoints mientras el chat responde otras preguntas. Permite consultar
+    estado, añadir aclaraciones, cancelar y retomar una tarea bloqueada.
+14. **Cobertura verificable de Gmail.** Paginación, rangos del día según la zona
+    horaria y conteos de IDs únicos. Distingue mensajes encontrados, resúmenes
+    consultados y cuerpos leídos; una revisión con páginas o resúmenes pendientes
+    no puede terminar con estado `completed`.
 
 Probado en una instalación personal de Apple Silicon: acceso de lectura a los
 seis servicios de Google, iMessage completo, lectura antes de la respuesta,
@@ -83,6 +92,11 @@ flowchart LR
     CLI[CLI de escritorio] --> Runtime[Runtime de Narciso]
     Gateway --> Runtime
     Runtime <--> DB[(SQLite y archivos locales)]
+    Runtime --> Jobs[Tareas y checkpoints]
+    Jobs --> Worker[Trabajador independiente]
+    Worker <--> Claude
+    Jobs --> Notify[Cola de notificaciones]
+    Notify --> Gateway
     Runtime --> Speech[whisper.cpp local]
     Runtime <--> Claude[Claude Code / modelo remoto]
     Claude <--> MCP[Herramientas MCP locales]
@@ -160,6 +174,39 @@ cambios cuando no haya una tarea activa. El servicio requiere que el usuario
 de macOS haya iniciado sesión; no funciona durante la pantalla de desbloqueo
 FileVault posterior a un reinicio.
 
+## Conversación y tareas de fondo
+
+Para una revisión amplia, puedes decir «Revisa los correos de hoy y dime qué
+merece atención». Narciso decide usar una tarea y devuelve un acuse natural,
+sin identificadores internos. Después puedes hacerle otra pregunta, pedir el estado, aclarar
+«solo los de ayer» o cancelar la revisión. Una pregunta nueva no cancela la
+anterior. La elección de delegar usa el modelo; no hay una demora artificial.
+
+El gateway mantiene la conversación separada de un trabajador de investigación.
+Máximo tres tareas pendientes/activas y un trabajador de fondo, además del chat.
+Cada segmento de Claude tiene un límite de tres minutos; el trabajo puede
+continuar desde un checkpoint durante hasta 18 ejecuciones antes de quedar
+bloqueado y pedir intervención. No es un scheduler para recordatorios futuros.
+
+El trabajador usa herramientas de lectura. No puede ejecutar ni preparar
+escrituras, cambiar memoria, crear tareas anidadas o reaccionar a otro mensaje.
+Las acciones de Google conservan el flujo de aprobación en la conversación.
+El acuse debe quedar entregado antes de que arranque la investigación.
+
+Los resultados y bloqueos se guardan en una cola persistente de notificaciones.
+Puede enviar hasta dos hallazgos intermedios relevantes, separados al menos un
+minuto; no envía informes rutinarios de progreso ni razonamiento interno.
+Las lecturas interrumpidas se retoman desde el último checkpoint al reiniciar;
+un envío ambiguo se conserva como `needs_review` sin repetirlo automáticamente.
+
+En Gmail se enumeran los mensajes reales, incluidos archivados y etiquetas
+personalizadas, pero excluyendo Spam y Papelera. Luego se consultan lotes de
+asuntos/resúmenes y se amplía el cuerpo de mensajes relevantes. El resultado
+incluye cobertura calculada por el runtime. Los resúmenes de SaneBox cuentan
+como un correo; lo que mencionan no se presenta como leído individualmente.
+El contador de mensajes no significa que todos los cuerpos o adjuntos se hayan
+leído. La paginación de Google no es un snapshot atómico del buzón.
+
 ## Datos, límites y recuperación
 
 - Estado privado: `~/.local/share/narciso/data`. No se publica con el código.
@@ -172,8 +219,8 @@ FileVault posterior a un reinicio.
   el Mac. No es un sistema completamente offline.
 - El recibo de lectura confirma recepción persistida, no descarga completa ni
   ejecución. Una reacción también es solo un acuse o gesto.
-- Una operación interrumpida o un envío ambiguo queda en `needs_review`;
-  no se repite automáticamente. La recuperación guiada es parte del roadmap.
+- Una operación de escritura interrumpida o un envío ambiguo queda en
+  `needs_review`; no se repite automáticamente. La recuperación guiada es parte del roadmap.
 - El modelo no tiene shell, navegador ni servidores MCP heredados. Las
   escrituras de Google pasan por la aprobación del runtime. Documentos,
   screenshots y contenido externo no conceden permisos.

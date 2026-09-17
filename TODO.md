@@ -17,7 +17,22 @@ Los puntos abiertos son planes, no capacidades ya disponibles.
 - [x] Reacciones nativas, automáticas para tareas de Google y opcionales en chat.
 - [x] CLI de escritorio, diagnóstico y pruebas de límites del runtime.
 
-## Fase 2 — Navegador en el Mac
+## Fase 2 — Conversación y trabajo independiente
+
+- [x] Decisión del modelo: responder directamente o iniciar una investigación.
+- [x] Acuse de recepción antes de arrancar una tarea guardada.
+- [x] Contexto de trabajo independiente mientras el chat sigue disponible.
+- [x] Checkpoints persistentes para continuar investigaciones largas.
+- [x] Estado, aclaraciones del propietario, cancelación y reanudación.
+- [x] Notificaciones de hallazgos relevantes, bloqueos y resultados.
+- [x] Lecturas de Gmail paginadas y conteos reales en lugar de estimaciones.
+- [x] Seguimiento separado de asuntos/resúmenes y cuerpos de correos.
+- [x] Impedir un resultado completo si queda cobertura pendiente de inspección.
+- [x] Herramientas de fondo limitadas a investigación/lectura.
+- [ ] Evaluar la decisión de delegar con más tareas reales y afinarla.
+- [ ] Extender el seguimiento de cobertura a otras colecciones de Google.
+
+## Fase 3 — Navegador en el Mac
 
 - [ ] Control de un navegador local con sesiones persistentes.
 - [ ] Perfiles separados para cada identidad/cuenta.
@@ -26,7 +41,7 @@ Los puntos abiertos son planes, no capacidades ya disponibles.
 - [ ] Verificar resultados y guardar evidencia útil de las acciones.
 - [ ] Reglas claras para acciones irreversibles, envíos y compras.
 
-## Fase 3 — Completar gestiones
+## Fase 4 — Completar gestiones
 
 - [ ] Localizar facturas y comprobar el saldo real en el proveedor.
 - [ ] Preparar pagos con importe, destinatario y método; ejecución tras aprobación.
@@ -34,7 +49,7 @@ Los puntos abiertos son planes, no capacidades ya disponibles.
 - [ ] Distinguir solicitud enviada, confirmación del proveedor y dinero recibido.
 - [ ] Guardar estado, evidencia y próximos pasos de cada gestión.
 
-## Fase 4 — Proactividad que persiste
+## Fase 5 — Proactividad que persiste
 
 - [ ] Scheduler duradero para recordatorios y seguimientos.
 - [ ] Monitoreo de correo y calendario con frecuencia y alcance configurables.
@@ -42,7 +57,7 @@ Los puntos abiertos son planes, no capacidades ya disponibles.
 - [ ] Horarios de silencio y controles de frecuencia.
 - [ ] Detección de tareas bloqueadas y de seguimientos vencidos.
 
-## Fase 5 — Cuentas y Google ampliado
+## Fase 6 — Cuentas y Google ampliado
 
 - [ ] Google Workspace adicional y correo empresarial.
 - [ ] Aislamiento de credenciales, memoria, sesiones y permisos por identidad.
@@ -51,7 +66,7 @@ Los puntos abiertos son planes, no capacidades ya disponibles.
 - [ ] Más formato en Docs, fórmulas y gráficos en Sheets.
 - [ ] Pruebas conectadas de escritura en cuentas y datos de prueba.
 
-## Fase 6 — Experiencia y fiabilidad
+## Fase 7 — Experiencia y fiabilidad
 
 - [ ] Panel de escritorio para tareas, sesiones, aprobaciones y diagnósticos.
 - [ ] Editar, exportar y borrar memoria e historial de forma explícita.

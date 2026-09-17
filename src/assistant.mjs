@@ -30,7 +30,6 @@ export async function handle(db, conversation, input, id = randomUUID(), media =
       }
     }
   } else {
-    const started = Date.now();
     db.exec('CREATE TABLE IF NOT EXISTS media_images (delivery TEXT, conversation TEXT, path TEXT PRIMARY KEY, created INTEGER)');
     for(const path of media.images||[])db.prepare('INSERT OR IGNORE INTO media_images VALUES (?,?,?,?)').run(id,conversation,path,Date.now());
     const recent=db.prepare('SELECT delivery,path FROM media_images WHERE conversation=? AND created>? ORDER BY created DESC, rowid DESC LIMIT 4').all(conversation,Date.now()-7*86400000).filter(row=>existsSync(row.path)).reverse();
@@ -38,8 +37,8 @@ export async function handle(db, conversation, input, id = randomUUID(), media =
     const messageIds=new Set(messages.map(message=>message.id));
     const blocks=recent.filter(row=>messageIds.has(row.delivery)).flatMap(row=>[{type:'text',text:`Image belonging to conversation message ${row.delivery}:`},...imageBlocks([row.path])]);
     answer = await respond(conversation, messages, id, blocks);
-    const pending = db.prepare("SELECT * FROM approvals WHERE conversation=? AND created>=? AND state='pending'")
-      .all(conversation, started);
+    const pending = db.prepare("SELECT a.* FROM approvals a JOIN approval_origins o ON o.code=a.code WHERE a.conversation=? AND o.turn_id=? AND a.state='pending'")
+      .all(conversation, id);
     // Include the actual queued payload; a model summary cannot conceal or
     // change what an approval will execute.
     for (const p of pending) answer += `\n\nPrepared change (${p.action}):\n${p.parameters}\nReply: approve ${p.code}\nExpires in 30 minutes.`;

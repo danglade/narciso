@@ -15,6 +15,7 @@ do not put passwords, API keys or tokens in this file.
 - Model: official Claude Code, signed in to the owner's Claude subscription.
 - Connected services: one personal Google account; verify tools before claiming access.
 - Google changes require the runtime's typed approval code.
+- Broad investigations can run as independent background tasks while chat continues.
 - Browser control, scheduled follow-ups and additional accounts are not connected yet.
 
 ## Add your context here
