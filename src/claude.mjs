@@ -5,9 +5,9 @@ import { root, local, timezone } from './config.mjs';
 import { createTrace } from './trace.mjs';
 import { replySchema, replyStream } from './reply-stream.mjs';
 
-export function modelProfile(taskId, env = process.env) {
+export function modelProfile(taskId, env = process.env, phase = '') {
   const model = (taskId ? env.NARCISO_TASK_MODEL : env.NARCISO_CHAT_MODEL) || 'claude-opus-5';
-  const effort = (taskId ? env.NARCISO_TASK_EFFORT : env.NARCISO_CHAT_EFFORT) || (taskId ? 'xhigh' : 'high');
+  const effort = phase==='publication' ? (env.NARCISO_PUBLICATION_EFFORT || 'high') : (taskId ? env.NARCISO_TASK_EFFORT : env.NARCISO_CHAT_EFFORT) || (taskId ? 'xhigh' : 'high');
   if (!['low', 'medium', 'high', 'xhigh', 'max'].includes(effort)) throw new Error('Invalid Narciso effort level.');
   return {model, effort};
 }
@@ -78,7 +78,7 @@ The reply field is the message itself, not commentary about composing the messag
   const system = options.isolated ? options.system : baseSystem;
   const mcp = options.isolated ? {mcpServers:{}} : { mcpServers: { narciso: { command: process.execPath,
     args: [resolve(root, 'src/mcp.mjs')] } } };
-  const profile = modelProfile(options.taskId);
+  const profile = modelProfile(options.taskId,process.env,options.phase);
   const args = ['--model', profile.model, '--effort', profile.effort, '-p', '--input-format', 'stream-json', '--output-format', 'stream-json', '--verbose',
     '--json-schema', JSON.stringify(options.schema || replySchema), '--no-session-persistence',
     '--restricted', '--setting-sources', '', '--settings', '{"disableAllHooks":true,"alwaysThinkingEnabled":true}',

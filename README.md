@@ -25,7 +25,7 @@ Para continuar el desarrollo: [documento de continuidad](docs/HANDOFF.md)
 3. **Claude Code con suscripción.** Usa el CLI oficial con la sesión del
    propietario. Sin extraer credenciales OAuth, sin API key y sin fallback
    automático a llamadas de API de pago. Opus 5 con esfuerzo `high` en el chat
-   y `xhigh` para investigaciones; ambos configurables en `.env`. Aplican los
+   y `xhigh` para investigaciones; la publicación usa `high`. Configurables en `.env`. Aplican los
    límites de la cuenta; un esfuerzo mayor puede consumir más cupo y tiempo.
 4. **Personalidad y contexto.** [SOUL.md](SOUL.md) define tono, iniciativa y
    límites. [CONTEXT.example.md](CONTEXT.example.md) es la plantilla del contexto
@@ -52,7 +52,7 @@ Para continuar el desarrollo: [documento de continuidad](docs/HANDOFF.md)
     cambio aprobado, y ocasionalmente ❤️, 😂, 🎉 o 💪 según el contexto.
     Máximo una reacción por mensaje; nunca significa que la tarea terminó.
 12. **CLI de escritorio y diagnóstico.** Conversación desde terminal, comando
-    `doctor`, trazas privadas con retención limitada y 46 pruebas automatizadas.
+    `doctor`, trazas privadas con retención limitada y 52 pruebas automatizadas.
 
 13. **Tareas independientes.** Narciso decide cuándo delegar una investigación
     y acusa su recepción. Un trabajador de fondo continúa con su propio contexto
@@ -71,7 +71,8 @@ Para continuar el desarrollo: [documento de continuidad](docs/HANDOFF.md)
 
 16. **Investigación y publicación separadas.** Fuentes capturadas por tarea,
     hallazgos con citas, comprobaciones de referencias/cálculos, revisión de
-    evidencia, redacción sin herramientas y auditoría final. Las etapas se guardan
+    evidencia y composición en una llamada aislada, seguida de una auditoría final.
+    Selección explícita de temas y propuestas limitadas a capacidades disponibles. Las etapas se guardan
     para recuperar trabajo. [Arquitectura y límites](docs/evidence-publication.md).
 
 Probado en una instalación personal de Apple Silicon: acceso de lectura a los
@@ -112,9 +113,8 @@ flowchart LR
     Jobs --> Worker[Trabajador independiente]
     Worker <--> Claude
     Worker --> Evidence[Fuentes y hallazgos]
-    Evidence --> Review[Revisión de evidencia]
-    Review --> Editor[Redacción aislada]
-    Editor --> Audit[Auditoría final]
+    Evidence --> Review[Composición y selección con evidencia]
+    Review --> Audit[Auditoría final]
     Audit --> Jobs
     Jobs --> Notify[Cola de notificaciones]
     Notify --> Gateway
@@ -207,8 +207,8 @@ El gateway mantiene la conversación separada de un trabajador de investigación
 Máximo tres tareas pendientes/activas y un trabajador de fondo, además del chat.
 Cada segmento de Claude tiene un límite de tres minutos; el trabajo puede
 continuar desde un checkpoint durante hasta 18 segmentos de investigación antes de quedar
-bloqueado y pedir intervención. La revisión, redacción y auditoría añaden llamadas
-separadas; el límite global es de 36 llamadas por tarea y puede aumentar tiempo y consumo del cupo. No es un scheduler para
+bloqueado y pedir intervención. La publicación normalmente usa dos llamadas: composición con evidencia y auditoría
+independiente, ambas con esfuerzo `high` configurable mediante `NARCISO_PUBLICATION_EFFORT`; el límite global es de 36 llamadas por tarea y puede aumentar tiempo y consumo del cupo. No es un scheduler para
 recordatorios futuros.
 
 El trabajador usa herramientas de lectura. No puede ejecutar ni preparar

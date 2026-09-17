@@ -1,8 +1,10 @@
-# Evidence and publication pipeline
+# Evidence, selection and publication
 
-Narciso previously let the investigating model write the final message directly.
-That allowed a correct list of emails to become unsupported reassurance or causal
-claims. Background results now pass through separate, durable stages.
+Narciso publishes a decision-oriented message rather than forwarding the
+researcher's working notes. The first implementation used three model calls
+(review, editor, audit). It still repeated incidental details and generic caveats.
+The current implementation combines evidence review and composition, followed by
+an independent audit. Selection and next actions are explicit structured data.
 
 ```mermaid
 flowchart LR
@@ -10,110 +12,135 @@ flowchart LR
   Research <--> Sources[(Captured sources)]
   Research --> Findings[Cited findings]
   Findings --> Checks[Reference, quote and arithmetic checks]
-  Checks --> Review[Evidence review]
-  Review --> Editor[Editor without tools or raw sources]
-  Editor --> Audit[Final claim audit]
+  Checks --> Compose[Evidence review, selection and composition]
+  Compose --> Host[Host validation and action rendering]
+  Host --> Audit[Independent factual and usefulness audit]
   Audit --> Outbox[(Persistent outbox)]
   Outbox --> iMessage
-  Review -->|Important unsupported claim| Research
-  Audit -->|Up to two repairs| Editor
+  Compose -->|Important unsupported finding| Research
+  Audit -->|Up to two repairs| Compose
 ```
 
-## Trust boundaries
+## Why two model passes
 
-The researcher can read the connected Google account. Successful reads are
-captured under task-bound source IDs in SQLite. A source records only the text
-actually returned to the model, its tool, reading level, truncation flag, and
-calculation dependencies. Publication packets are bounded to 200,000 characters;
-oversized packets return to research for narrower selection. These records are private data, not repository files.
+The composer reads the captured evidence, judges candidate findings and selects
+what the owner needs to know. Its support verdicts are provisional: the auditor
+sees the original evidence and omissions too, not just an approved-looking draft.
+Both calls have no tools, hooks, conversation history or persistent model session.
+Combining review and writing removes one normal model call; it also means the
+writer sees raw source text. Source text remains untrusted data and the final
+audit is a separate context. This is a tradeoff, not stronger semantic isolation.
 
-A finding contains an atomic statement, category, importance, reported/inference
-classification, uncertainty, exact quotes and source IDs. Quotes must occur in
-the captured source (whitespace normalization only). References to another task,
-missing sources and invented quotes are rejected before another model runs.
+Research retains the task model/effort, currently Opus 5/xhigh. Publication uses
+the same model with `NARCISO_PUBLICATION_EFFORT=high` by default. The setting is
+configurable. Fewer calls and lower effort do not guarantee a fixed token or
+latency saving: packet size, repairs and provider load matter.
 
-Sourced sums require a quote containing the amount and a transaction identifier.
-The host uses integer cents and rejects duplicate transaction identifiers. This
-checks arithmetic and the presence of input values, not whether an extraction is
-semantically correct, two different identifiers describe the same transaction,
-a currency was inferred correctly, or a payment has settled. Evidence review must
-check those meanings; a bank email remains a bank email, not a bank reconciliation.
+## Evidence and calculations
 
-The evidence reviewer sees the cited source packet in a fresh Claude invocation.
-It approves or rejects each finding. Rejected relevant facts return to research, even when their importance was not
-marked high; low-priority unsupported speculation can be omitted. The reviewer cannot silently
-rewrite an unsupported claim into an approved one.
+Successful reads are captured under task-bound IDs in SQLite, with tool, reading
+level, truncation flag and calculation dependencies. Quotes must appear in the
+captured text after whitespace normalization. Missing sources, invented quotes
+and cross-task references are rejected in code. Packets are bounded to 200,000
+characters; larger packets return to research for narrower selection.
 
-The editor receives approved findings and uncertainties, language and the owner
-objective. It receives neither raw mail nor conversation history. All publication
-stages run with an empty MCP configuration, no built-in execution tools, no hooks,
-and no session persistence. Only the investigator gets Google tools.
+Sourced sums use integer cents, quotes containing an amount and transaction
+identifier, and duplicate-identifier rejection. These checks do not prove that
+extraction is semantically correct, different IDs represent different payments,
+currency was inferred correctly, or a payment settled. A bank email remains a
+reported observation, not independent verification of the bank account.
 
-The editor associates each paragraph with approved finding IDs. The host rejects
-unknown references, missing high-importance findings, internal IDs, reasoning tags,
-numbers absent from the paragraph's approved findings, dropped explicit timezone
-labels on clock times, and summaries over 250 words. A separate final audit
-then checks implications, certainty, relationships and actions against evidence.
-At most two editorial repairs are attempted for a source packet. An exhausted editorial stage blocks publication instead of repeating Google research. An unapproved
-message cannot enter the completed-result outbox.
+## Selection and omission
 
-## Durability and owner control
+Each finding receives a support verdict plus a disposition: include, duplicate,
+routine, out of scope, lower priority, or unsupported. Reasons remain private.
+Rejected relevant facts return to research; low-priority unsupported speculation
+may be omitted. All supported high-importance findings must be represented;
+related ones can share a paragraph. Their incidental details need not be copied.
+The audit checks for omitted consequential facts even when their original
+importance was not marked high.
 
-`task_evidence` stores sources. `task_research` stores completed research.
-`task_artifacts` stores each review, draft and audit keyed by the full packet,
-including owner clarifications, stage policies/schemas and model configuration. Prior candidate findings survive correction cycles; required missing review calls
-are provided explicitly to prevent repeated premature completion. Unchanged completed stages can be reused after
-restarts; changed evidence or instructions invalidate that cache.
+Default summaries aim for 60–110 words, capped at 160 including the next action,
+with at most 45 words per topic paragraph. Explicit requests for detail can use
+250 words and retain requested IPs/times. The auditor checks that this exception
+matches the actual owner request. The host rejects summary IPs/clock times,
+known authentication codes in findings, task/source IDs, basic numerical drift,
+missing topic references and selected generic process/proof disclaimers.
+These are targeted checks, not a complete linguistic or secret-detection system.
 
-Cancellation stops active work and prevents publication. Owner clarifications
-arriving during editing invalidate the old response. Intermediate important
-findings use the same publication path: a research segment returns `continue`,
-`notify: true`, and cited findings. Raw `task_notify` prose cannot be sent.
-Research and publication share a durable limit of 36 model calls per task, in addition
-to the 18 research-segment limit and per-call timeout. Explicitly resuming a blocked
-task resets that budget; automatic retries do not. The existing two-update limit and ambiguous-delivery handling remain in force.
+Material uncertainty stays: for example, a notice does not establish who logged
+in or why a workflow failed. Generic explanations of what email cannot prove
+should not displace useful findings. The host adds the existing short mail-scope
+note after publication, outside the message word budget.
 
-`reply` from the investigator is private working text. It is never used as the
-final message. If research is blocked or verification exhausts its budget, the
-host sends a bounded status message, not the unverified draft. Mail reading limits
-are appended in plain language; detailed counts remain available in diagnostics.
+## Next actions are data, not arbitrary promises
 
-## What this does and does not guarantee
+`src/next-actions.mjs` supplies an action catalog derived from available read
+tools, plus conversational actions. The composer chooses at most one action and
+binds it to included findings with literal service/person/topic labels. The host
+renders it beside the relevant paragraph. The audit checks the target and whether
+this is the useful next step, not a repeat of already completed research.
 
-Deterministic guarantees: task/source binding, quote membership, decimal
-arithmetic, transaction-ID deduplication, stage schemas, basic numerical
-consistency, absence of tools for publication stages, and no publication before
-required stages pass.
+Available proposals: ask whether an access is recognized; inspect related mail;
+prepare a reply in chat; check calendar availability; read an identified Google
+document. `none` is valid when no follow-up is useful. Routine receipts should not
+end with a manufactured question. Unknown services can use a generic recognition
+question rather than treating “unknown device” as a service name.
 
-Semantic review is still probabilistic. The same model family may share blind
-spots across stages. A false claim in an email may be accurately quoted; the
-source itself is not independently authenticated by this pipeline. Number checks
-cannot catch every number written in words or every misleading implication.
-These checks reduce known failure modes; they do not prove every final sentence.
+There are no payment, browser, account-change or scheduled-follow-up actions in
+this catalog. A proposal never executes an action. An accepted proposal returns
+to foreground conversation and the normal tool/approval flow. Catalog availability
+reflects installed capabilities, not a guarantee that remote authorization is
+still valid. Actual tool calls check their connection as usual.
 
-This path covers background investigations and their intermediate findings.
-Ordinary foreground conversation still uses its own reply contract. Rephrasing
-an old result in foreground chat is not yet subjected to this full pipeline.
-Source retention needs its own policy; existing trace retention does not expire
-SQLite evidence automatically.
+## Durability, budget and control
 
-## Evaluation
+- `task_evidence`: private source observations.
+- `task_research`: completed or partial candidate findings.
+- `task_artifacts`: composition and audit outputs keyed by evidence, objective,
+  owner updates, policies, schemas, capabilities and model configuration. Each
+  audit is also keyed by its exact rendered message, including host action text.
+- `task_stage_metrics`: model-stage elapsed milliseconds and input character
+  counts; this is not a token billing meter.
 
-`npm test` exercises reference isolation, invented quotes, exact sums, editor
-number changes, audit rejection, cancellation, clarification races and restart
-recovery. These are deterministic control-path tests, not model quality scores.
+Unchanged completed stages are reusable after interruption; changed inputs
+invalidate the cache. Required incomplete Gmail pages are passed explicitly to
+research, including auxiliary searches. Candidate findings survive corrections.
 
-`node scripts/evaluate-publication.mjs` is an explicit, subscription-consuming
-model evaluation. Its fixed synthetic cases reproduce observed failure patterns:
-login/charge inference, memo majorities, incomplete contracts, operational
-causality, fabricated recruiter urgency, overgeneralized IP clusters and omitted
-contract exceptions. It also includes a valid alert and
-runs that supported finding through editing and final audit. It sends no messages
-and does not access Google. Passing these cases is evidence about that run, not
-a universal accuracy guarantee. Keep these fixed when changing prompts or models.
+The normal publication path is two calls. Up to two repairs are allowed; exhausted
+publication blocks rather than restarting Google research. Research and publication
+share 36 model calls per task, an 18-research-segment limit and per-call timeout.
+Explicitly resuming a blocked task resets the budget; automatic retries do not.
+Cancellation and new owner clarifications prevent stale publication.
 
-A more elaborate service architecture (separate workers, durable external queue,
-independent verifier provider) can preserve these same contracts. For one owner
-on one Mac, SQLite and isolated subprocesses keep operations manageable; migration
-is warranted when throughput, failure isolation or independent model evaluation
-requires it, not simply to add more agents.
+Intermediate important findings use the same pipeline. Raw researcher text cannot
+be sent through `task_notify`. The existing two-update cap, persistent outbox and
+ambiguous-delivery handling remain. A failed verification sends a bounded status
+message, not the unverified result.
+
+## Verification and remaining limits
+
+`npm test` checks source binding, arithmetic, selected/omitted references, action
+availability/rendering, budgets, stage recovery, cancellation and clarification
+races. Mocks verify control flow, not the quality of the model's judgment.
+
+`node --env-file-if-exists=.env scripts/evaluate-publication.mjs` runs the fixed
+eight source-interpretation cases with the actual composer and a full supported
+publication. `scripts/evaluate-experience.mjs` tests mixed inbox priorities,
+invoices, reply proposals, routine receipts and explicitly requested detail.
+Both consume Claude quota but use synthetic data and no Google/Photon calls.
+The experience evaluator accepts `--baseline` to compare the same mixed packet
+with frozen commit `ba90f6f`, and `--output PATH` for a report. Optional environment
+variable `NARCISO_EVAL_CASE` selects one fixture. No private corpus is committed.
+
+The final semantic and usefulness audit is probabilistic; the same model family
+can share blind spots. Correctly quoting a source does not authenticate it.
+Numerical checks are lexical and incomplete. An omission reason is not proof that
+omission was wise. Fixed examples and measured runs are evidence about those
+runs, not guarantees for every future request.
+
+This pipeline covers background results and intermediate findings. Ordinary
+foreground reformulations still have a separate reply contract. Retention of
+SQLite evidence/artifacts is pending; trace expiry does not delete those records.
+A provider-independent verifier or external work queue may be useful later if
+measured accuracy, throughput or fault-isolation needs justify the extra cost.

@@ -11,7 +11,7 @@ try {
 }catch{}
 let google=false;
 try {google=JSON.parse(readFileSync(resolve(local,'google-token.json'),'utf8')).email===email;}catch{}
-const status={claudeSubscriptionLogin:claude,chatModel:modelProfile(),taskModel:modelProfile(true),ownerPhoneValid:!!normalizePhone(owner),
+const status={claudeSubscriptionLogin:claude,chatModel:modelProfile(),taskModel:modelProfile(true),publicationModel:modelProfile(true,process.env,'publication'),ownerPhoneValid:!!normalizePhone(owner),
   photonCredentialsPresent:!!(process.env.PHOTON_PROJECT_ID && process.env.PHOTON_PROJECT_SECRET),
   googleOAuthClientPresent:existsSync(resolve(local,'google-client.json')),googleTokenPresent:google,
   imageInputEnabled:existsSync('/usr/bin/sips'),

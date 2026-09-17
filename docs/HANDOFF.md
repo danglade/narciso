@@ -1,7 +1,7 @@
 # Retomar Narciso
 
-Actualizado: 17 de septiembre de 2026. Estado del código funcional: `ba90f6f`,
-publicado en `main` y desplegado en el Mac Mini al cerrar esta sesión.
+Actualizado: 17 de septiembre de 2026. La versión funcional actual se identifica en `git log` de `main`.
+La base anterior a la mejora de selección es `ba90f6f`; no confundirla con la versión vigente.
 Este documento es una fotografía del estado; comprobar Git y el servicio al retomar.
 
 ## Objetivo y criterio del propietario
@@ -22,9 +22,10 @@ La experiencia deseada:
 - Usar la suscripción personal de Claude Code; no introducir facturación API
   alternativa sin una decisión explícita.
 
-Instinct ganó la comparación de experiencia hecha durante esta sesión. Narciso
-mejoró su verificación, pero todavía selecciona demasiados detalles incidentales
-y a veces escribe como un auditor. No dar por resuelta la naturalidad del producto.
+Instinct ganó la comparación inicial. La siguiente revisión aborda los detalles
+incidentales y las acciones vagas con selección explícita, propuestas del runtime
+y una auditoría de utilidad. Las evaluaciones prueban escenarios concretos, no una
+paridad universal con Instinct. Consultar el informe de selección al retomar.
 
 ## Qué funciona y qué falta
 
@@ -32,11 +33,11 @@ y a veces escribe como un auditor. No dar por resuelta la naturalidad del produc
 | --- | --- |
 | iMessage/Photon | Conectado; recepción persistida, Read, respuestas y reacciones |
 | Fotos y notas de voz | Funcionando; transcripción local inglés/español |
-| Claude | CLI oficial, suscripción; Opus 5, `high` chat y `xhigh` investigación |
+| Claude | CLI oficial, suscripción; Opus 5: `high` chat/publicación, `xhigh` investigación |
 | Google personal | Gmail, Calendar, Tasks, Drive, Docs y Sheets; operaciones disponibles según herramientas |
 | Escrituras Google | Flujo de aprobación del runtime; los investigadores solo leen |
 | Investigaciones | Persistencia, checkpoints, aclaraciones, cancelación y resultados posteriores |
-| Publicación de resultados | Fuentes → comprobaciones → revisión → editor aislado → auditoría |
+| Publicación de resultados | Fuentes → comprobaciones → composición con evidencia → auditoría |
 | Navegador local | Pendiente; no prometer entrar a portales, pagar o cerrar sesiones |
 | Seguimientos programados | Pendientes; una tarea de fondo no es un scheduler |
 | Otras identidades/cuentas | Pendientes; no asumir que están conectadas |
@@ -53,9 +54,12 @@ omitían excepciones. Mejorar solo el tono o el esfuerzo del modelo no resolvió
 
 Ahora cada hallazgo lleva fuentes de su propia tarea y citas comprobables.
 Los totales monetarios usan aritmética decimal exacta con referencias de origen.
-El revisor comprueba los hallazgos; el editor recibe únicamente los aprobados;
-una revisión final contrasta el texto con la evidencia antes de autorizar su envío.
-Editor y revisores no tienen herramientas ni acceso al buzón.
+Una composición aislada revisa, selecciona y redacta usando las fuentes capturadas;
+un auditor independiente verifica hechos, omisiones y utilidad. Son dos llamadas
+en el recorrido normal. Ambas etapas carecen de herramientas y acceso directo al
+buzón. El compositor sí ve el paquete de fuentes, a diferencia del antiguo editor.
+La acción propuesta sale de `src/next-actions.mjs` y el host la redacta junto al
+hallazgo correspondiente. No ejecuta nada ni amplía las capacidades disponibles.
 
 SQLite conserva fuentes, investigación y resultados de cada etapa. Cambiar las
 fuentes, instrucciones o configuración invalida la caché correspondiente. Los
@@ -65,14 +69,18 @@ un resultado obsoleto. Los avisos intermedios pasan por el mismo circuito.
 
 Límites actuales: 18 segmentos de investigación, 36 llamadas de modelo por tarea,
 3 minutos por llamada, paquete de evidencia de 200.000 caracteres y resumen de
-hasta 250 palabras antes de la nota de alcance añadida por el host.
+hasta 160 palabras por resumen (45 por tema) o 250 cuando se solicitó detalle,
+antes de la nota de alcance añadida por el host.
 
 Diseño y límites detallados: [evidence-publication.md](evidence-publication.md).
 Para un propietario en un Mac mantuvimos SQLite y procesos aislados. Una cola
 externa o servicios separados quedan para necesidades demostradas de capacidad
 o aislamiento. Un modelo verificador independiente es una opción a evaluar.
 
-## Validación realizada y sus límites
+## Validación de la versión anterior y sus límites
+
+Los siguientes datos corresponden a `ba90f6f`. Para la revisión de selección,
+consultar [selection-evaluation.md](selection-evaluation.md).
 
 - **46 pruebas automatizadas** pasaron en el código final.
 - **8 casos sintéticos con el modelo** pasaron: alerta válida y regresiones de
@@ -100,7 +108,7 @@ compartir errores. Un correo no prueba por sí solo la realidad del hecho report
 
 ## Por dónde continuar
 
-1. **Afinar selección y naturalidad.** Reutilizar evidencia ya capturada para
+1. **Mantener la evaluación de selección y naturalidad.** Reutilizar evidencia ya capturada para
    comparar redacciones sin volver a leer Gmail en cada iteración. Menos IPs,
    horas exactas, versiones, nombres y salvedades incidentales. Conservar lo que
    cambia una decisión y ofrecer una acción disponible. No ocultar incertidumbre
@@ -128,13 +136,15 @@ compartir errores. Un correo no prueba por sí solo la realidad del hecho report
 | `src/claude.mjs` | CLI oficial, modelo/esfuerzo y aislamiento de etapas |
 | `src/jobs.mjs`, `src/job-runner.mjs` | Estado, presupuesto, investigación, recuperación y publicación |
 | `src/evidence.mjs` | Fuentes por tarea, citas, esquema de hallazgos y totales |
-| `src/publication.mjs` | Revisor, editor, auditor, validaciones y caché |
+| `src/publication.mjs` | Composición con evidencia, auditor, validaciones y caché |
+| `src/next-actions.mjs` | Catálogo de propuestas, validación de destinos y texto de la acción |
 | `src/mail-review.mjs` | Paginación, alcance y lecturas pendientes |
 | `src/mcp.mjs` | Herramientas del modelo y captura de fuentes |
 | `SOUL.md`, `CONTEXT.example.md` | Personalidad pública y plantilla de contexto privado |
 | `test/publication.test.mjs` | Pruebas del circuito de evidencia/publicación |
 | `test/fixtures/evidence-review.json` | Casos sintéticos publicables |
-| `scripts/evaluate-publication.mjs` | Evaluación opcional que consume cupo de Claude |
+| `scripts/evaluate-publication.mjs` | Regresiones de evidencia; consume cupo de Claude |
+| `scripts/evaluate-experience.mjs` | Selección, acciones, detalle solicitado y comparación con la versión anterior |
 
 ## Operación en el Mac y datos privados
 
@@ -147,6 +157,8 @@ compartir errores. Un correo no prueba por sí solo la realidad del hecho report
 - Evaluación privada: `~/.local/share/narciso/data/evaluations/evidence-publication-2026-09-17/`.
   Contiene `latest-publication.json`, `validation.json`, `evaluation.json` y una
   copia de la base de evaluación. No es el estado del servicio en producción.
+- Repetición privada de selección: `~/.local/share/narciso/data/evaluations/selection-2026-09-17/`,
+  con `selection-replay-verified.json` y copia de su base.
 
 La configuración de este Mac no debe asumirse en otro host. Los cambios del
 checkout no actualizan automáticamente el servicio: el instalador copia el código.
@@ -194,7 +206,9 @@ cambios exclusivos de documentación no necesitan reiniciar el servicio.
 ## Prompt para retomar
 
 > Lee `docs/HANDOFF.md` y `docs/evidence-publication.md`. Comprueba el estado actual
-> de Git y del servicio. Retoma la mejora de selección y naturalidad de Narciso,
+> de Git y del servicio y lee `docs/selection-evaluation.md`. Continúa desde los
+> resultados medidos, no desde la arquitectura anterior de tres llamadas. Evalúa
+> selección y naturalidad de Narciso,
 > conservando la verificación de evidencia. Empieza evaluando las salidas privadas
 > ya guardadas, sin repetir toda la investigación ni enviar mensajes de prueba.
 > No asumas que el navegador o los seguimientos programados están implementados.

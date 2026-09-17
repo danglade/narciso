@@ -1,0 +1,200 @@
+[
+  {
+    "id": "daily_mixed",
+    "language": "es",
+    "objective": "Revisa los correos de hoy y dime qué merece atención.",
+    "findings": [
+      {
+        "id": "cloud_access",
+        "text": "CloudNest reported a new login from Northport at 04:58 UTC, IP 192.0.2.8, Chrome 153 macOS 10.15.7. An access code 123456 was sent. The owner has not confirmed it.",
+        "statement": "CloudNest avisó de un acceso desde Northport a las 04:58 UTC, IP 192.0.2.8, Chrome 153 y macOS 10.15.7. Envió el código 123456.",
+        "category": "security",
+        "importance": "high",
+        "uncertainty": "Falta confirmar si fue del propietario."
+      },
+      {
+        "id": "model_access",
+        "text": "ModelBay reported an unrecognized device login from Northport at 05:16 UTC, IP 192.0.2.8. The owner has not confirmed it.",
+        "statement": "ModelBay avisó de un acceso desde un dispositivo desconocido en Northport a las 05:16 UTC, IP 192.0.2.8.",
+        "category": "security",
+        "importance": "high",
+        "uncertainty": "Falta confirmar si fue del propietario."
+      },
+      {
+        "id": "payments",
+        "receipts": [
+          {
+            "source": "TX-A",
+            "amount": "100.00"
+          },
+          {
+            "source": "TX-B",
+            "amount": "200.00"
+          }
+        ],
+        "statement": "Example Bank notificó 2 pagos recibidos por USD 300.00 en total.",
+        "category": "money",
+        "importance": "normal",
+        "uncertainty": "Son avisos del banco, no una conciliación bancaria."
+      },
+      {
+        "id": "cleanup",
+        "text": "Project Atlas: nightly cleanup workflow failed. No failure cause or production impact is stated.",
+        "statement": "Falló el workflow de limpieza nocturna del proyecto Atlas.",
+        "category": "operations",
+        "importance": "normal",
+        "uncertainty": "El aviso no explica la causa ni el impacto."
+      },
+      {
+        "id": "newsletter",
+        "text": "MarketLetter daily promotional newsletter arrived.",
+        "statement": "Llegó el newsletter promocional MarketLetter.",
+        "category": "other",
+        "importance": "low"
+      }
+    ],
+    "expect": {
+      "action": "confirm_recognition",
+      "include": [
+        "cloud_access",
+        "model_access",
+        "payments",
+        "cleanup"
+      ],
+      "omit": [
+        "newsletter"
+      ],
+      "absent": [
+        "123456",
+        "192.0.2.8",
+        "04:58",
+        "05:16",
+        "153",
+        "10.15.7",
+        "no prueba",
+        "no prueban",
+        "conciliación",
+        "suma cuadra"
+      ],
+      "maxWords": 160
+    }
+  },
+  {
+    "id": "invoice",
+    "language": "es",
+    "objective": "Qué hay con esta factura; puedes encargarte del siguiente paso?",
+    "findings": [
+      {
+        "id": "invoice",
+        "text": "Acme invoice INV-209 has an unpaid balance of USD 420.00, due September 19, 2026.",
+        "statement": "La factura INV-209 de Acme muestra USD 420.00 pendientes y vence el 19 de septiembre de 2026.",
+        "category": "money",
+        "importance": "high",
+        "uncertainty": "El saldo es el indicado en la factura; no se consultó al proveedor."
+      }
+    ],
+    "expect": {
+      "action": "inspect_mail",
+      "include": [
+        "invoice"
+      ],
+      "omit": [],
+      "absent": [
+        "voy a pagar",
+        "puedo pagar",
+        "iniciar sesión",
+        "te avisaré mañana"
+      ],
+      "maxWords": 100,
+      "present": [
+        "comprobante de pago"
+      ]
+    }
+  },
+  {
+    "id": "recruiter",
+    "language": "es",
+    "objective": "Revisa este correo de Ana y dime qué sigue.",
+    "findings": [
+      {
+        "id": "request",
+        "text": "Recruiter Ana asks for contact details to discuss a DBA role. No response deadline or owner interest is stated.",
+        "statement": "Ana pide tus datos de contacto para conversar sobre un puesto de DBA.",
+        "category": "request",
+        "importance": "normal",
+        "uncertainty": "No indica un plazo de respuesta."
+      }
+    ],
+    "expect": {
+      "action": "draft_reply",
+      "include": [
+        "request"
+      ],
+      "omit": [],
+      "absent": [
+        "urgente",
+        "se enfría",
+        "responde hoy"
+      ],
+      "maxWords": 80
+    }
+  },
+  {
+    "id": "routine_receipt",
+    "language": "en",
+    "objective": "What does this receipt say?",
+    "findings": [
+      {
+        "id": "receipt",
+        "text": "Example Store receipt: USD 35.00 charged for a desk lamp, order LAMP-12. No action requested.",
+        "statement": "Example Store sent a receipt for USD 35.00 for a desk lamp, order LAMP-12.",
+        "category": "money",
+        "importance": "normal"
+      }
+    ],
+    "expect": {
+      "action": "none",
+      "include": [
+        "receipt"
+      ],
+      "omit": [],
+      "absent": [
+        "?",
+        "settlement",
+        "legitimate",
+        "nothing to worry"
+      ],
+      "maxWords": 70
+    }
+  },
+  {
+    "id": "requested_details",
+    "language": "es",
+    "objective": "Dame la IP, la hora exacta con zona horaria y el dispositivo del acceso a CloudNest. No necesito ninguna gestión adicional.",
+    "findings": [
+      {
+        "id": "access",
+        "text": "CloudNest reported a login at 04:58 UTC, IP 192.0.2.8, Chrome 153 on macOS 10.15.7. The owner confirmed this login was theirs.",
+        "statement": "CloudNest avisó de un acceso a las 04:58 UTC, IP 192.0.2.8, Chrome 153 y macOS 10.15.7; el propietario confirmó que fue suyo.",
+        "category": "security",
+        "importance": "high"
+      }
+    ],
+    "expect": {
+      "action": "none",
+      "include": [
+        "access"
+      ],
+      "omit": [],
+      "absent": [],
+      "present": [
+        "192.0.2.8",
+        "04:58",
+        "UTC",
+        "153",
+        "10.15.7"
+      ],
+      "maxWords": 100
+    }
+  }
+]

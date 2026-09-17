@@ -2,18 +2,24 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {openStore,acceptDelivery,saveMessage} from '../src/store.mjs';
 import {saveEvidence,getEvidence,validateFindings,sumEvidenceAmounts,captureEvidence} from '../src/evidence.mjs';
-import {publishResearch,validateDraft,EvidenceRejected,PublicationRejected} from '../src/publication.mjs';
+import {publishResearch,validateDraft,validateComposition,EvidenceRejected,PublicationRejected} from '../src/publication.mjs';
 import {createJobRunner} from '../src/job-runner.mjs';
 import {startJob,updateJob,cancelJob,recoverJobs} from '../src/jobs.mjs';
+import {actionCatalog,renderAction} from '../src/next-actions.mjs';
+import {modelProfile} from '../src/claude.mjs';
 function setup(){const db=openStore(':memory:');const job={id:'job',conversation:'owner',objective:'Review notices'};
  const sourceId=saveEvidence(db,job.id,'gmail_review_bodies','body','The service reports an unrecognized login at 02:10.');
  const finding={id:'login',statement:'El servicio avisa de un acceso desconocido a las 02:10.',category:'security',kind:'reported',importance:'high',citations:[{sourceId,quote:'unrecognized login at 02:10'}],calculationId:'',uncertainty:'Falta confirmar si fue tuyo.'};
  const research={status:'completed',reply:'DO NOT SEND THE RESEARCH DRAFT',checkpoint:'Facts only',language:'es',notify:false,findings:[finding]};return {db,job,finding,research,sourceId};}
+function composed({supported=true,badDraft=false}={}){return {
+ verdicts:[{id:'login',supported,disposition:supported?'include':'unsupported',reason:supported?'Source reports the access.':'Authorization inferred from an alert.'}],
+ detailLevel:'summary',paragraphs:supported?[{text:badDraft?'Hubo un acceso a las 04:30.':'El servicio avisa de un acceso desconocido.',findingIds:['login']}]:[],
+ action:supported?{kind:'confirm_recognition',targets:[{findingId:'login',label:'servicio'}]}:{kind:'none',targets:[]},
+};}
 function fakeRun(log,{badDraft=false,badAudit=false}={}){return async(_c,messages,id,_media,options)=>{
  log.push({id,options,packet:JSON.parse(messages[0].body)});
- if(id.includes(':review:'))return {verdicts:[{id:'login',supported:true,reason:'Supported by the alert; authorization is unknown.'}]};
- if(id.includes(':edit-'))return {paragraphs:[{text:badDraft?'Hubo un acceso a las 04:30.':'El servicio avisa de un acceso desconocido a las 02:10. ¿Fuiste tú?',findingIds:['login']}]};
- return {supported:!badAudit,missingImportant:false,issues:badAudit?['Unsupported implication']:[]};
+ if(id.includes(':compose-'))return composed({badDraft});
+ return {supported:!badAudit,missingImportant:false,useful:true,issues:badAudit?['Unsupported implication']:[]};
 };}
 
 test('evidence references are task-bound, quotes exact and truncation preserved',()=>{
@@ -44,23 +50,95 @@ test('editor cannot add numbers, cite unknown findings, expose IDs or omit impor
 });
 test('publication isolates stages, hides research prose, and resumes cached stages',async()=>{
  const {db,job,research}=setup();const log=[];const run=fakeRun(log);
- const reply=await publishResearch(db,job,research,{run});assert.match(reply,/¿Fuiste tú/);assert.doesNotMatch(reply,/DO NOT SEND/);
- assert.equal(log.length,3);assert.ok(log.every(c=>c.options.isolated));
- const edit=log.find(c=>c.id.includes(':edit-'));assert.equal(edit.packet.sources,undefined);assert.equal(edit.packet.history,undefined);
- assert.equal(await publishResearch(db,job,research,{run}),reply);assert.equal(log.length,3);
- await publishResearch(db,job,research,{run,updates:[{id:1,body:'Use yesterday'}]});assert.equal(log.length,6);db.close();
+ const reply=await publishResearch(db,job,research,{run});assert.match(reply,/¿Reconoces/);assert.doesNotMatch(reply,/DO NOT SEND/);
+ assert.equal(log.length,2);assert.ok(log.every(c=>c.options.isolated));
+ assert.ok(log.every(c=>c.options.phase==='publication'));
+ const compose=log.find(c=>c.id.includes(':compose-'));assert.ok(compose.packet.sources.length);assert.equal(compose.packet.history,undefined);
+ assert.equal(db.prepare('SELECT count(*) AS n FROM task_stage_metrics').get().n,2);
+ assert.equal(await publishResearch(db,job,research,{run}),reply);assert.equal(log.length,2);
+ await publishResearch(db,job,research,{run,updates:[{id:1,body:'Use yesterday'}]});assert.equal(log.length,4);db.close();
 });
-test('important rejected claims never reach the editor; unapproved draft never reaches delivery',async()=>{
+test('a cached audit cannot approve a different rendered message',async()=>{
+ const {db,job,research}=setup();await publishResearch(db,job,research,{run:fakeRun([])});
+ const altered=composed();altered.paragraphs[0].text='El servicio notificó actividad sin reconocer.';
+ db.prepare("UPDATE task_artifacts SET output=? WHERE job_id=? AND stage='compose-0'").run(JSON.stringify(altered),job.id);
+ let audited;
+ const reply=await publishResearch(db,job,research,{run:async(_c,messages,id)=>{
+  assert.match(id,/:audit-0:/);audited=JSON.parse(messages[0].body).renderedReply;
+  return {supported:true,missingImportant:false,useful:true,issues:[]};
+ }});
+ assert.equal(audited,reply);assert.match(audited,/actividad sin reconocer/);db.close();
+});
+test('important rejected claims stop publication; unapproved draft never reaches delivery',async()=>{
  const {db,job,research}=setup();let runs=0;
- await assert.rejects(publishResearch(db,job,research,{run:async()=>{runs++;return {verdicts:[{id:'login',supported:false,reason:'Authorization inferred from an alert.'}]};}}),EvidenceRejected);assert.equal(runs,1);
+ await assert.rejects(publishResearch(db,job,research,{run:async()=>{runs++;return composed({supported:false});}}),EvidenceRejected);assert.equal(runs,1);
  const fresh=setup();const log=[];
  await assert.rejects(publishResearch(fresh.db,fresh.job,fresh.research,{run:fakeRun(log,{badAudit:true})}),PublicationRejected);
- assert.equal(log.length,7); // review, edit/audit, two bounded repairs
+ assert.equal(log.length,6); // compose/audit, two bounded repairs
  assert.equal(fresh.db.prepare('SELECT count(*) AS n FROM job_events').get().n,0);db.close();fresh.db.close();
+});
+
+test('summary removes incidental detail but explicitly requested detail can retain times',()=>{
+ const {db,finding}=setup();
+ const c=composed();c.paragraphs[0].text='El servicio avisa de un acceso a las 02:10.';
+ assert.throws(()=>validateComposition(c,[finding]),/precise clock/);
+ c.detailLevel='requested_detail';assert.match(validateComposition(c,[finding]).reply,/02:10/);
+ c.detailLevel='summary';c.paragraphs[0].text='detalle '.repeat(159).trim();
+ assert.throws(()=>validateComposition(c,[finding]),/45 words/);
+ c.paragraphs=Array.from({length:4},()=>({text:'detalle '.repeat(40).trim(),findingIds:['login']}));
+ assert.throws(()=>validateComposition(c,[finding]),/limit is 160/);db.close();
+});
+
+test('source details and free-form offers cannot sneak around the action catalog',()=>{
+ const {db,finding}=setup();finding.statement+=' Código 123456.';
+ for(const text of ['Código 123456.','Puedo pagar esa factura.','I can close your session.','¿Quieres ayuda?','Solo verifiqué la aritmética.']){
+  const c=composed();c.paragraphs[0].text=text;
+  assert.throws(()=>validateComposition(c,[finding]));
+ }
+ const limited=composed();limited.paragraphs[0].text='No puedo pagar desde aquí.';
+ assert.doesNotThrow(()=>validateComposition(limited,[finding]));
+ const c=composed();c.action={kind:'pay_bill',targets:[]};assert.throws(()=>validateComposition(c,[finding]));
+ c.action={kind:'confirm_recognition',targets:[{findingId:'login',label:'other service'}]};assert.throws(()=>validateComposition(c,[finding]),/literal label/);
+ c.action={kind:'confirm_recognition',targets:[{findingId:'login',label:'123456'}]};assert.throws(()=>validateComposition(c,[finding]),/authentication code/);
+ db.close();
+});
+
+test('omissions and action targets are tied to included supported findings',()=>{
+ const {db,finding}=setup();const low={...finding,id:'routine',importance:'low',category:'other',statement:'Newsletter de Example.'};
+ const c=composed();c.verdicts.push({id:'routine',supported:true,disposition:'routine',reason:'Routine newsletter.'});
+ assert.doesNotThrow(()=>validateComposition(c,[finding,low]));
+ c.action={kind:'draft_reply',targets:[{findingId:'routine',label:'Example'}]};assert.throws(()=>validateComposition(c,[finding,low]),/included finding/);
+ c.action={kind:'none',targets:[]};c.verdicts[0].disposition='lower_priority';
+ c.verdicts[1].disposition='include';c.paragraphs=[{text:'Newsletter de Example.',findingIds:['routine']}];
+ assert.throws(()=>validateComposition(c,[finding,low]),/high-importance/);db.close();
+});
+
+test('host action catalog follows tools and permits no follow-up for routine outcomes',()=>{
+ const disabled=actionCatalog([]);assert.ok(!disabled.some(a=>a.kind==='inspect_mail'));
+ const finding={id:'mail',statement:'Ana pidió tus datos de contacto.',category:'request'};
+ assert.equal(renderAction({kind:'draft_reply',targets:[{findingId:'mail',label:'Ana'}]},[finding]),'¿Quieres que prepare una respuesta para Ana?');
+ assert.equal(renderAction({kind:'none',targets:[]},[finding]),'');
+ assert.throws(()=>renderAction({kind:'inspect_mail',targets:[{findingId:'mail',label:'Ana'}]},[finding],'es',disabled),/unavailable/);
+ assert.throws(()=>renderAction({kind:'confirm_recognition',targets:[{findingId:'mail',label:'Ana'}]},[finding]),/security/);
+ assert.throws(()=>renderAction({kind:'draft_reply',targets:[{findingId:'mail',label:'Ana'}]},[{...finding,category:'money'}]),/direct-request/);
+ const bill={id:'bill',statement:'Factura de Acme por USD 420.',category:'money'};
+ assert.equal(renderAction({kind:'inspect_mail',targets:[{findingId:'bill',label:'Acme'}]},[bill]),'¿Quieres que busque en tu correo un comprobante de pago de Acme?');
+ assert.equal(modelProfile('task',{},'publication').effort,'high');
+ assert.equal(modelProfile('task',{}).effort,'xhigh');
+ assert.equal(modelProfile('task',{NARCISO_PUBLICATION_EFFORT:'medium'},'publication').effort,'medium');
+});
+
+test('usefulness audit can reject an accurate but poor action and repair it without research',async()=>{
+ const {db,job,research}=setup();let calls=0;
+ const reply=await publishResearch(db,job,research,{run:async(_c,_m,id)=>{
+  calls++;if(id.includes(':compose-'))return composed();
+  return {supported:true,missingImportant:false,useful:calls>2,issues:calls>2?[]:['Prioritize asking the owner to recognize the access.']};
+ }});
+ assert.match(reply,/Reconoces/);assert.equal(calls,4);db.close();
 });
 test('cancellation during publication prevents saving a stage or returning a reply',async()=>{
  const {db,job,research}=setup();const controller=new AbortController();
- await assert.rejects(publishResearch(db,job,research,{signal:controller.signal,run:async()=>{controller.abort();return {verdicts:[{id:'login',supported:true,reason:'ok'}]};}}));
+ await assert.rejects(publishResearch(db,job,research,{signal:controller.signal,run:async()=>{controller.abort();return composed();}}));
  assert.equal(db.prepare('SELECT count(*) AS n FROM task_artifacts').get().n,0);db.close();
 });
 function runnerSetup(){const db=openStore(':memory:');acceptDelivery(db,'origin','owner','Review');db.prepare("UPDATE deliveries SET state='processing'").run();saveMessage(db,'origin','owner','user','Review');const job=startJob(db,'owner','origin','Review','Review');db.prepare("UPDATE deliveries SET state='sent'").run();return {db,job};}
@@ -83,7 +161,7 @@ test('runner sends neither a rejected research draft nor an unreviewed intermedi
 
  test('relevant reported facts return to research even when not marked high importance',async()=>{
   const {db,job,research}=setup();research.findings[0].importance='normal';let runs=0;
-  await assert.rejects(publishResearch(db,job,research,{run:async()=>{runs++;return {verdicts:[{id:'login',supported:false,reason:'Claim combines a correct total with a false memo count.'}]};}}),EvidenceRejected);
+  await assert.rejects(publishResearch(db,job,research,{run:async()=>{runs++;return composed({supported:false});}}),EvidenceRejected);
   assert.equal(runs,1);db.close();
  });
 

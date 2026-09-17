@@ -37,9 +37,11 @@ Los puntos abiertos son planes, no capacidades ya disponibles.
 - [ ] Evaluar periódicamente prioridades y exactitud con correos reales; la suma no verifica por sí sola la extracción ni deduplica avisos con IDs diferentes.
 
 - [x] Registro privado de fuentes y hallazgos con citas vinculadas a cada tarea.
-- [x] Revisión de evidencia, editor aislado y auditoría final con recuperación por etapa.
+- [x] Composición basada en evidencia y auditoría aislada, con recuperación por etapa.
 - [x] Misma verificación para hallazgos intermedios; sin envío directo del investigador.
 - [x] Casos fijos reproducibles para los errores observados.
+- [x] Selección explícita de hallazgos, omisiones privadas y propuestas desde un catálogo de capacidades.
+- [x] Dos llamadas de publicación en el recorrido normal, métricas por etapa y evaluación comparativa.
 - [ ] Política de retención para fuentes y artefactos privados en SQLite.
 - [ ] Evaluar verificador independiente y extender el control a reformulaciones del chat.
 

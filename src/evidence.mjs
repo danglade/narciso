@@ -8,6 +8,7 @@ export function initEvidence(db) {
   db.exec(`CREATE TABLE IF NOT EXISTS task_evidence (
     id TEXT PRIMARY KEY, task_id TEXT NOT NULL, tool TEXT NOT NULL, level TEXT NOT NULL,
     truncated INTEGER NOT NULL, text TEXT NOT NULL, dependencies TEXT NOT NULL, created INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS task_stage_metrics (job_id TEXT NOT NULL, input_key TEXT NOT NULL, stage TEXT NOT NULL, duration_ms INTEGER NOT NULL, input_chars INTEGER NOT NULL, PRIMARY KEY(job_id,input_key,stage));
     CREATE TABLE IF NOT EXISTS task_model_calls (job_id TEXT PRIMARY KEY, calls INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS task_research (job_id TEXT PRIMARY KEY, input_key TEXT NOT NULL, output TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS task_artifacts (job_id TEXT NOT NULL, input_key TEXT NOT NULL, stage TEXT NOT NULL,

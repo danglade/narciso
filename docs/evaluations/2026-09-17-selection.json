@@ -1,0 +1,97 @@
+{
+  "scope": "Synthetic fixtures, individual runs; latest passing invoice and requested-details runs replace earlier runs. Timings are samples, not a statistical benchmark. Baseline uses Opus 5/xhigh; current publication uses Opus 5/high. No Google calls or messages sent.",
+  "results": [
+    {
+      "case": "daily_mixed",
+      "pass": true,
+      "checks": {
+        "action": true,
+        "includes": true,
+        "omits": true,
+        "absent": true,
+        "present": true,
+        "words": true
+      },
+      "calls": 2,
+      "durationMs": 13818,
+      "words": 56,
+      "action": "confirm_recognition",
+      "reply": "CloudNest y ModelBay avisaron de accesos desde Northport que aún no has confirmado; ModelBay lo registra como dispositivo desconocido. ¿Reconoces esos accesos a CloudNest y ModelBay?\n\nExample Bank notificó 2 pagos entrantes por un total de USD 300.00.\n\nFalló el workflow de limpieza nocturna del proyecto Atlas; el aviso no indica la causa ni el impacto."
+    },
+    {
+      "case": "baseline_daily_mixed",
+      "calls": 3,
+      "durationMs": 23983,
+      "words": 131,
+      "reply": "Lo que más me preocupa del correo de hoy son dos avisos de acceso, y ninguno está confirmado por ti. CloudNest reportó un inicio de sesión desde Northport a las 04:58 UTC y envió un código de verificación. ModelBay reportó otro acceso, desde un dispositivo desconocido y también en Northport, a las 05:16 UTC. Los dos avisos apuntan a la misma IP. ¿Fuiste tú?\n\nEn lo demás, Example Bank notificó dos pagos recibidos que suman USD 300.00 entre los dos.\n\nTambién falló el workflow de limpieza nocturna del proyecto Atlas. El aviso no explica la causa ni menciona impacto, así que no puedo decirte todavía qué tan serio es.\n\nDime si esos dos accesos fueron tuyos y, si quieres, sigo revisando tu correo por si hay más avisos de esas cuentas."
+    },
+    {
+      "case": "invoice",
+      "pass": true,
+      "checks": {
+        "action": true,
+        "includes": true,
+        "omits": true,
+        "absent": true,
+        "present": true,
+        "words": true
+      },
+      "calls": 2,
+      "durationMs": 9881,
+      "words": 68,
+      "action": "inspect_mail",
+      "reply": "La factura INV-209 de Acme figura con un saldo pendiente de USD 420.00 y vencimiento el 19 de septiembre de 2026, es decir, en dos días. Es lo que indica el correo de Acme; no hay confirmación del proveedor sobre el estado real del saldo. ¿Quieres que busque en tu correo un comprobante de pago de Acme?\n\nNo puedo realizar pagos ni gestionar el cobro por mi cuenta."
+    },
+    {
+      "case": "recruiter",
+      "pass": true,
+      "checks": {
+        "action": true,
+        "includes": true,
+        "omits": true,
+        "absent": true,
+        "present": true,
+        "words": true
+      },
+      "calls": 2,
+      "durationMs": 6916,
+      "words": 29,
+      "action": "draft_reply",
+      "reply": "Ana, reclutadora, te escribió pidiendo tus datos de contacto para hablar sobre un puesto de DBA. No menciona ningún plazo de respuesta. ¿Quieres que prepare una respuesta para Ana?"
+    },
+    {
+      "case": "routine_receipt",
+      "pass": true,
+      "checks": {
+        "action": true,
+        "includes": true,
+        "omits": true,
+        "absent": true,
+        "present": true,
+        "words": true
+      },
+      "calls": 2,
+      "durationMs": 4514,
+      "words": 20,
+      "action": "none",
+      "reply": "Example Store emailed a receipt for USD 35.00 for a desk lamp, order LAMP-12, and says no action is needed."
+    },
+    {
+      "case": "requested_details",
+      "pass": true,
+      "checks": {
+        "action": true,
+        "includes": true,
+        "omits": true,
+        "absent": true,
+        "present": true,
+        "words": true
+      },
+      "calls": 2,
+      "durationMs": 7955,
+      "words": 41,
+      "action": "none",
+      "reply": "El acceso a CloudNest que ya confirmaste como tuyo se registró a las 04:58 UTC, desde la IP 192.0.2.8, con Chrome 153 sobre macOS 10.15.7. La hora viene indicada en UTC en el propio aviso, no en tu zona local (America/New_York)."
+    }
+  ]
+}
