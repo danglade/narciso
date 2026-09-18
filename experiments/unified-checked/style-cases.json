@@ -1,0 +1,15 @@
+[
+ {"id":"selected_news","title":"Novedades con ruido técnico","prompt":"¿Qué novedades merecen atención?","history":[],"sources":[
+  {"id":"backup","title":"Copia de seguridad fallida","snippet":"Falló la copia nocturna","text":"Monitoreo: la copia de seguridad nocturna de la base falló. La última copia válida es de hace 48 horas. Evento 9988721 a las 01:17:45 UTC, agente backup-worker-12, build a9b12c7. No se sabe la causa ni se ha ejecutado otra copia."},
+  {"id":"pickup","title":"Recogida confirmada","snippet":"Mañana de 10 a 12 ET","text":"El transportista recogerá el equipo mañana sábado 19 de septiembre entre 10 AM y 12 PM ET. Debe estar embalado y con la etiqueta adherida."},
+  {"id":"noise","title":"Ofertas semanales","snippet":"Siete promociones","text":"Promociones generales de tiendas de muebles, zapatos, café, software, ropa, viajes y teléfonos; ninguna vinculada a pedidos ni vencimientos."}],
+  "rubric":{"must":["priorizar copia fallida y última válida","preparar equipo para recogida"],"mustNot":["repetir IDs builds o timestamp incidental","listar promos","afirmar que volvió a ejecutar copia"]}},
+ {"id":"closed_items","title":"Una respuesta corta basta","prompt":"Ya cancelé la cita y reconocí el cargo. ¿Queda algo pendiente de estos dos avisos?","history":[],"sources":[
+  {"id":"visit","title":"Cita cancelada","snippet":"Cancelación confirmada","text":"Consultorio confirma: cita cancelada a petición del cliente. Sin penalización ni saldo pendiente. No requiere respuesta."},
+  {"id":"charge","title":"Cargo de compra","snippet":"Cargo USD 25","text":"Banco: cargo por USD 25.00 en Example Cafe. El propietario confirmó que lo reconoce."}],
+  "rubric":{"must":["cerrar ambos asuntos brevemente"],"mustNot":["inventar seguimiento o tareas","ofrecer borrador sin necesidad","generalizar tranquilidad a toda la cuenta"]}},
+ {"id":"subscription_choice","title":"Recomendación con condición real","prompt":"¿Me conviene bajar al plan básico?","history":[],"sources":[
+  {"id":"plans","title":"Planes actuales","snippet":"Básico 12 y Plus 30","text":"Plan Básico: USD 12 al mes, máximo 5 proyectos. Plan Plus: USD 30 al mes, máximo 20 proyectos. Cambiar a Básico requiere que haya 5 proyectos activos o menos; los archivados no cuentan. No hay otro cargo por cambiar."},
+  {"id":"usage","title":"Uso confirmado","snippet":"Seis proyectos activos","text":"El propietario confirmó seis proyectos activos. Uno es un proyecto terminado que puede archivarse sin perder acceso a sus archivos. Los otros cinco siguen en uso."}],
+  "rubric":{"must":["recomendar archivar el terminado antes de bajar","conservar condición máximo cinco"],"mustNot":["afirmar cambio ejecutado","inventar pérdida de archivos","ofrecer tareas que no resuelven la decisión"]}}
+]

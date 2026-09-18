@@ -179,6 +179,49 @@ test('one durable model-call budget covers research and publication',async()=>{
  assert.equal(db.prepare('SELECT calls FROM task_model_calls').get().calls,1);assert.doesNotMatch(db.prepare('SELECT body FROM job_events').get().body,/RAW DRAFT/);db.close();
 });
 
+test('service-window times survive summaries and 12/24 hour formatting without inventing facts',()=>{
+ const finding={id:'service',statement:'Aviso recibido a las 08:32 AM ET. Servicio el lunes 21 de 9:00 AM a 4:00 PM.',uncertainty:'',category:'deadline',importance:'normal'};
+ const c={verdicts:[{id:'service',supported:true,disposition:'include',reason:'Window reported'}],detailLevel:'summary',paragraphs:[{text:'Servicio el lunes 21 de 09:00 a 16:00.',findingIds:['service']}],action:{kind:'none',targets:[]}};
+ assert.match(validateComposition(c,[finding]).reply,/16:00/);
+ c.paragraphs[0].text='Servicio el lunes 21 de 09:00 a 17:00.';
+ assert.throws(()=>validateComposition(c,[finding]),/number absent/);
+ c.paragraphs[0].text='Servicio el lunes 22 de 09:00 a 16:00.';
+ assert.throws(()=>validateComposition(c,[finding]),/number absent/);
+ const timed={...finding,statement:'Servicio a las 4:00 PM ET.'};
+ for(const text of ['Servicio a las 16:00 ET.','Servicio a las 4:00 PM ET.','Servicio a las 4:00 p.m. (ET).','Servicio a las 4:00 p. m. ET.'])assert.doesNotThrow(()=>validateDraft({paragraphs:[{text,findingIds:['service']}]},[timed]));
+ for(const text of ['Servicio a las 16:00.','Servicio a las 16:00 UTC.'])assert.throws(()=>validateDraft({paragraphs:[{text,findingIds:['service']}]},[timed]),/timezone/);
+});
+
+test('publication failure records private cause and does not claim missing mail coverage',async()=>{
+ const {db}=runnerSetup();const runner=createJobRunner(db,{autoStart:false,run:async()=>done,publish:async()=>{throw new PublicationRejected('Private diagnostic: unsupported clock time');}});
+ await runner.step();
+ const failure=db.prepare('SELECT * FROM task_failures').get();assert.equal(failure.phase,'publication');assert.match(failure.detail,/unsupported clock/);
+ const reply=db.prepare('SELECT result FROM jobs').get().result;assert.match(reply,/preparación del resumen/);assert.doesNotMatch(reply,/cobertura|Private diagnostic|clock/);db.close();
+});
+
+test('publication repairs keep previous drafts and cumulative feedback instead of cycling errors',async()=>{
+ const {db,job,research}=setup();const packets=[];
+ const run=async(_c,messages,id)=>{
+  if(id.includes(':audit-'))return {supported:true,missingImportant:false,useful:true,issues:[]};
+  const packet=JSON.parse(messages[0].body);packets.push(packet);
+  if(id.includes(':compose-0'))return composed({badDraft:true});
+  if(id.includes(':compose-1')){const c=composed();c.action.targets[0].label='not in finding';return c;}
+  assert.equal(packet.feedback.length,2);assert.match(packet.feedback[0],/number absent/);assert.match(packet.feedback[1],/literal label/);
+  assert.equal(packet.previousComposition.action.targets[0].label,'not in finding');return composed();
+ };
+ assert.match(await publishResearch(db,job,research,{run}),/¿Reconoces/);assert.equal(packets.length,3);db.close();
+});
+
+test('publication distinguishes the real owner request from an assistant-generated research plan',async()=>{
+ const {db,job,research}=setup();job.origin='owner-request';job.objective='List every timestamp and coverage counter';
+ saveMessage(db,job.origin,job.conversation,'user','Anything new in my email?');
+ const run=async(_c,messages,id)=>{
+  const packet=JSON.parse(messages[0].body);assert.equal(packet.ownerRequest,'Anything new in my email?');assert.equal(packet.objective,job.objective);
+  return id.includes(':compose-')?composed():{supported:true,missingImportant:false,useful:true,issues:[]};
+ };
+ await publishResearch(db,job,research,{run});db.close();
+});
+
 test('oversized evidence packets are rejected before consuming model calls',async()=>{
  const {db,job,finding,research}=setup();let calls=0;
  finding.citations=Array.from({length:5},(_,i)=>({sourceId:saveEvidence(db,job.id,'large-source','body',`Notice ${i} `+'x'.repeat(43900)),quote:`Notice ${i}`}));

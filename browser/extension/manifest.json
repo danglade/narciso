@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Narciso · Chrome local",
+  "version": "0.2.2",
+  "description": "Búsqueda, lectura y pasos de formularios revisados por el propietario para Narciso local.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkMJuNDH6iO9ie6OODC3kJniXVtd7AT3UXGRHGDODD0Hi0Bm30vWrXI5hvRDAUdKLbvQAII4IqIkpJGlhlbhpxOEX3n47yFK5ZGyPjy6s7ZGxlLm24wsdFCKLmJVgykH66JemFsW70jGf/8fT+RI/QcCe6nlAv06nlzd2Osow+vceLm+CLgazYgaWphkEyR3YmJXY6UkBB6B1U0Hxd/8L4WZuHHNMqMX7YA6y3DO1OgsP+MEr2T1DpZE58DfbJ8qSMgt7HCw4UWE6a6g+eUM/d7y0NU406W26AxP+lTbn2fGOIV18+z8KY3E8N32IO5+VXAbofZ9Mwa02XLgNbItCtQIDAQAB",
+  "permissions": [
+    "nativeMessaging",
+    "scripting",
+    "tabs",
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "background": {
+    "service_worker": "worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Narciso: reconectar navegador"
+  },
+  "incognito": "not_allowed"
+}

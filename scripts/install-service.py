@@ -22,7 +22,7 @@ service = f'{domain}/ai.narciso.gateway'
 # Build a complete replacement before stopping the current service. Copying
 # symlinks into an existing node_modules tree is not safe on Python 3.9.
 staged = Path(tempfile.mkdtemp(prefix='app-staged-', dir=runtime))
-for name in ('src', 'node_modules'):
+for name in ('src', 'browser', 'node_modules'):
     shutil.copytree(root / name, staged / name, symlinks=True)
 for name in ('package.json', 'package-lock.json', 'SOUL.md', 'CONTEXT.example.md', '.env'):
     shutil.copy2(root / name, staged / name)

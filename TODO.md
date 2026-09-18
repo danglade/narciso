@@ -44,23 +44,40 @@ Los puntos abiertos son planes, no capacidades ya disponibles.
 - [x] Dos llamadas de publicación en el recorrido normal, métricas por etapa y evaluación comparativa.
 - [ ] Política de retención para fuentes y artefactos privados en SQLite.
 - [ ] Evaluar verificador independiente y extender el control a reformulaciones del chat.
+- [x] Variante experimental con autor unificado y correcciones materiales devueltas al mismo rol.
+- [x] Formato de texto plano y notificador experimental con estado persistido por burbuja.
+- [x] Ensayos aislados con casos nuevos y repetición en sombra de evidencia real guardada.
+- [ ] Aprobar calidad de la variante y preparar piloto reversible con tareas nuevas; no está desplegada.
+- [ ] Escalar comprobaciones a paquetes mayores de 200 KB sin perder contradicciones ni bloquear innecesariamente.
 
 ## Fase 3 — Navegador en el Mac
 
-- [ ] Control de un navegador local con sesiones persistentes.
+- [x] Búsqueda y lectura con extensión en el perfil local de Chrome y sesiones existentes.
+- [x] Prototipo opt-in de clics/formularios con aprobación por paso y snapshot de controles. Piloto desplegado; validado con datos ficticios en Chrome y Claude.
+- [x] Verificar en Chrome real campos, checkbox y envío con datos ficticios; ver docs/browser-validation.md.
+- [x] Recargar 0.2.1 y confirmar en Chrome el destino correcto de los 13 controles del formulario.
+- [x] Probar el recorrido con Claude y desplegar un piloto selectivo con respaldo.
+- [x] Corregir fragmentación URL/caption de Photon y verificar una sola pestaña/propuesta con Claude.
+- [ ] Confirmar desde iMessage la entrada agrupada y ejecución sin códigos.
+- [x] Ejecución de pasos del encargo directo sin códigos, con snapshot único y verificación; interpretación del alcance por el modelo.
+- [ ] Reanudación autónoma duradera de gestiones y validación amplia de alcance en portales reales.
 - [ ] Perfiles separados para cada identidad/cuenta.
-- [ ] Relevo humano visible para credenciales, MFA y CAPTCHA.
-- [ ] Pausar y continuar la misma tarea tras completar el relevo.
-- [ ] Verificar resultados y guardar evidencia útil de las acciones.
+- [x] Conservar pestaña ante login/CAPTCHA detectado y pedir intervención humana.
+- [x] Volver a leer la misma pestaña al retomar una tarea tras el aviso del propietario.
+- [x] Guardar fuentes web de tareas de fondo para el circuito de verificación.
+- [ ] Validar relevo con distintos proveedores y recuperación tras reiniciar Chrome.
+- [ ] Verificar resultados y guardar evidencia útil de futuras acciones de escritura.
 - [ ] Reglas claras para acciones irreversibles, envíos y compras.
 
 ## Fase 4 — Completar gestiones
 
+- [ ] Prioridad del propietario: ejecutar gestiones online de principio a fin, con estado persistente y relevo mínimo; ver [contrato de producto](docs/online-errands.md).
 - [ ] Localizar facturas y comprobar el saldo real en el proveedor.
 - [ ] Preparar pagos con importe, destinatario y método; ejecución tras aprobación.
 - [ ] Gestionar cancelaciones y solicitudes de reembolso.
 - [ ] Distinguir solicitud enviada, confirmación del proveedor y dinero recibido.
-- [ ] Guardar estado, evidencia y próximos pasos de cada gestión.
+- [x] Persistir intentos, aprobaciones, bloqueos y evidencia de pasos del prototipo.
+- [ ] Criterios de cierre de cada gestión, reanudación autónoma y evidencia del resultado completo.
 
 ## Fase 5 — Proactividad que persiste
 
@@ -90,3 +107,18 @@ Los puntos abiertos son planes, no capacidades ya disponibles.
 - [ ] Respuestas de audio opcionales.
 - [ ] Onboarding y verificación automática de dependencias/configuración.
 - [ ] Ampliar las pruebas de fallos de conexión, reinicios y recuperación.
+
+
+### Navegador: regresión de controles
+
+- [x] Radios/checkboxes con estado checked observable y verificación posterior.
+- [x] Distinguir rechazos previos a una acción de intentos con resultado desconocido.
+- [x] Regresión reproducible del formulario completo con datos ficticios.
+- [x] Evaluar CuaDriver instalado: permisos y lectura AX de Chrome comprobados.
+- [x] Adaptador CUA como ejecutor por defecto en turnos interactivos, con ventana
+  vinculada, exclusión, observación antes/después y detección de Mac bloqueado.
+- [x] Regresión Claude Code + CUA + Chrome real: texto, radio, casilla, select,
+  canvas sin accesibilidad y envío único verificado por el servidor.
+- [ ] Ampliar CUA a diálogos de archivos/aplicaciones externas con pruebas reales.
+- [ ] Validar arranque de CuaDriver tras reinicio/login del Mini.
+- [ ] Confirmación del propietario por iMessage con CUA activo.

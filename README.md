@@ -11,10 +11,16 @@ con un entorno que puedas abrir, inspeccionar y controlar tú mismo.
 **Local no significa offline:** el servicio, el estado, los archivos y la
 transcripción de audio viven en el Mac. Claude procesa el modelo en remoto a
 través de Claude Code; Photon conecta iMessage y Google aporta sus APIs.
-El control del navegador local todavía está pendiente.
+Las gestiones interactivas usan CuaDriver local para observar y manejar tu Chrome
+existente mediante accesibilidad, capturas y teclado/ratón. Requiere la sesión
+del Mac desbloqueada y trabaja en primer plano. La extensión mantiene la búsqueda
+y lectura de las investigaciones en segundo plano. El encargo autoriza sus pasos,
+sin aprobación por campo; Narciso verifica el resultado. [Instalación y límites](docs/browser.md).
 
 Para continuar el desarrollo: [documento de continuidad](docs/HANDOFF.md)
 (estado, validaciones, pendientes y pasos para retomar).
+Para otra sesión o worktree, empieza por [AGENTS.md](AGENTS.md) y la
+[guía de contexto compartido](docs/worktrees.md).
 
 ## Lo que ya hicimos
 
@@ -34,7 +40,7 @@ Para continuar el desarrollo: [documento de continuidad](docs/HANDOFF.md)
    archivar. Calendar: listar calendarios/eventos y crear eventos. Tasks:
    listar, crear y completar. Drive: buscar. Docs: leer, crear y añadir texto.
    Sheets: leer, crear y escribir valores.
-6. **Cambios con aprobación.** Las operaciones de escritura se preparan con
+6. **Cambios de Google con aprobación.** Las escrituras de Google se preparan con
    su payload real. Solo un mensaje escrito `approve CODE` las ejecuta; el
    código está vinculado a la conversación, caduca y no se puede reutilizar.
 7. **Confirmación de lectura.** Marca el mensaje como leído después de guardar
@@ -52,7 +58,7 @@ Para continuar el desarrollo: [documento de continuidad](docs/HANDOFF.md)
     cambio aprobado, y ocasionalmente ❤️, 😂, 🎉 o 💪 según el contexto.
     Máximo una reacción por mensaje; nunca significa que la tarea terminó.
 12. **CLI de escritorio y diagnóstico.** Conversación desde terminal, comando
-    `doctor`, trazas privadas con retención limitada y 52 pruebas automatizadas.
+    `doctor`, trazas privadas con retención limitada y pruebas automatizadas.
 
 13. **Tareas independientes.** Narciso decide cuándo delegar una investigación
     y acusa su recepción. Un trabajador de fondo continúa con su propio contexto
@@ -244,7 +250,9 @@ leído. La paginación de Google no es un snapshot atómico del buzón.
   ejecución. Una reacción también es solo un acuse o gesto.
 - Una operación de escritura interrumpida o un envío ambiguo queda en
   `needs_review`; no se repite automáticamente. La recuperación guiada es parte del roadmap.
-- El modelo no tiene shell, navegador ni servidores MCP heredados. Las
+- El modelo no tiene shell ni servidores MCP heredados. Chrome expone solo
+  búsqueda y lectura mediante el puente local. El piloto interactivo añade pasos
+  de formulario/clic ejecutados por el host dentro del encargo del propietario; las investigaciones de fondo siguen siendo de solo lectura. Las
   escrituras de Google pasan por la aprobación del runtime. Documentos,
   screenshots y contenido externo no conceden permisos.
 - Es una implementación personal en evolución; no tiene paridad completa

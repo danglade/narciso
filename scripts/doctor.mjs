@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { local, owner, normalizePhone, email } from '../src/config.mjs';
 import { claudeEnvironment, modelProfile } from '../src/claude.mjs';
+import {browserStatus} from '../src/browser.mjs';
 
 let claude=false;
 try {
@@ -16,6 +17,6 @@ const status={claudeSubscriptionLogin:claude,chatModel:modelProfile(),taskModel:
   googleOAuthClientPresent:existsSync(resolve(local,'google-client.json')),googleTokenPresent:google,
   imageInputEnabled:existsSync('/usr/bin/sips'),
   audioTranscriptionReady:existsSync(process.env.NARCISO_FFMPEG_BIN||'/opt/homebrew/bin/ffmpeg') && existsSync(process.env.NARCISO_WHISPER_BIN||'/opt/homebrew/bin/whisper-cli') && existsSync(process.env.NARCISO_WHISPER_MODEL||resolve(local,'models/ggml-small.bin')),
-  backgroundInvestigationsEnabled:true,evidencePublicationEnabled:true,browserConnected:false,scheduledFollowupsEnabled:false};
+  backgroundInvestigationsEnabled:true,evidencePublicationEnabled:true,browserConnected:(await browserStatus()).connected,browserInteractiveEnabled:process.env.NARCISO_BROWSER_INTERACTIVE==='1',scheduledFollowupsEnabled:false};
 console.log(JSON.stringify(status,null,2));
 if(!claude || !status.ownerPhoneValid)process.exitCode=1;

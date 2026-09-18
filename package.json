@@ -8,6 +8,7 @@
     "chat": "node --env-file-if-exists=.env src/cli.mjs",
     "start": "node --env-file-if-exists=.env src/photon.mjs",
     "doctor": "node --env-file-if-exists=.env scripts/doctor.mjs",
+    "browser:install": "node scripts/install-browser.mjs",
     "google:login": "node --env-file-if-exists=.env scripts/google-login.mjs",
     "test": "node --test test/*.test.mjs"
   },
